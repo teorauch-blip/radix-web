@@ -43,7 +43,7 @@ export function Testimonials({ testimonials }: TestimonialsProps) {
   const testimonial = testimonials[current]
 
   return (
-    <section ref={ref} className="section-padding bg-radix-void relative overflow-hidden">
+    <section ref={ref} className="section-padding bg-radix-abyss relative overflow-hidden">
       {/* Background glow */}
       <div
         className="absolute inset-0 pointer-events-none"

@@ -39,7 +39,7 @@ export function Administration() {
   return (
     <section ref={ref} className="section-padding relative overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 bg-radix-dark" />
+      <div className="absolute inset-0 bg-radix-abyss" />
       <div
         className="absolute inset-0"
         style={{

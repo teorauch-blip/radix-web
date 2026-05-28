@@ -16,7 +16,7 @@ export function FeaturedProperties({ properties }: FeaturedPropertiesProps) {
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
   return (
-    <section ref={ref} className="section-padding bg-radix-void">
+    <section ref={ref} className="section-padding bg-radix-abyss">
       <div className="section-container">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-14">

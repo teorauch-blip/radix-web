@@ -30,8 +30,67 @@ export function Inventory({ properties }: InventoryProps) {
       : properties.filter((p) => p.type === activeFilter)
 
   return (
-    <section ref={ref} className="section-padding bg-radix-void">
-      <div className="section-container">
+    <section ref={ref} className="pb-28 lg:pb-40 relative overflow-hidden">
+
+      {/* ── Base — radial: bright navy center, dark edges ── */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 80% 60% at 50% 32%, #2C4A78 0%, #162C4E 55%, #0C1E36 100%)',
+        }}
+      />
+
+      {/* ── Central bloom — main light source ── */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 65% 50% at 50% 28%, rgba(20,100,190,0.40) 0%, transparent 62%)',
+        }}
+      />
+
+      {/* ── Top ceiling light ── */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 55% 22% at 50% 0%, rgba(30,120,210,0.22) 0%, transparent 70%)',
+        }}
+      />
+
+      {/* ── Left ambient halo ── */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 50% 65% at 0% 42%, rgba(0,80,175,0.18) 0%, transparent 60%)',
+        }}
+      />
+
+      {/* ── Right ambient halo ── */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 44% 55% at 100% 36%, rgba(8,24,110,0.20) 0%, transparent 56%)',
+        }}
+      />
+
+      {/* ── Warm accent ── */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 50% 35% at 50% 22%, rgba(175,135,80,0.055) 0%, transparent 50%)',
+        }}
+      />
+
+      {/* ── Grid arquitectónico ── */}
+      <div
+        className="absolute inset-0 opacity-[0.025]"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px)',
+          backgroundSize: '80px 80px',
+        }}
+      />
+
+      <div className="section-container relative z-10 pt-10 lg:pt-14">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10">
           <div>

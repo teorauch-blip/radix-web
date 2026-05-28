@@ -2,57 +2,68 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Hero } from '@/components/home/hero'
 import { Intro } from '@/components/home/intro'
-import { ExperiencePanels } from '@/components/home/experience-panels'
-import { FeaturedProperties } from '@/components/home/featured-properties'
-import { MapSection } from '@/components/home/map-section'
-import { Administration } from '@/components/home/administration'
 import { Inventory } from '@/components/home/inventory'
-import { Investments } from '@/components/home/investments'
 import { DataViz } from '@/components/home/data-viz'
+import { MapSection } from '@/components/home/map-section'
+import { ExperiencePanels } from '@/components/home/experience-panels'
+import { Administration } from '@/components/home/administration'
+import { Investments } from '@/components/home/investments'
 import { Testimonials } from '@/components/home/testimonials'
 import { CtaSection } from '@/components/home/cta-section'
-import { FEATURED_PROPERTIES, TESTIMONIALS } from '@/lib/mock-data'
+import { getPropiedadesPublicas, adaptPropiedad } from '@/lib/data/propiedades'
+import { getContactConfig } from '@/lib/data/web-config'
+import { TESTIMONIALS } from '@/lib/mock-data'
 
-export default function HomePage() {
+export const revalidate = 300
+
+export default async function HomePage() {
+  const [rawProps, contact] = await Promise.all([
+    getPropiedadesPublicas({ limit: 9 }),
+    getContactConfig(),
+  ])
+
+  const properties = rawProps.map(adaptPropiedad)
+
   return (
     <>
       <Header />
       <main>
-        {/* 1. Hero cinematográfico fullscreen */}
+        {/* 1. Hero */}
         <Hero />
 
-        {/* 2. Intro institucional */}
+        {/* 2. Sobre Radix */}
         <Intro />
 
-        {/* 3. Experience panels */}
-        <ExperiencePanels />
+        {/* 3. Propiedades disponibles — datos reales */}
+        <Inventory properties={properties} />
 
-        {/* 4. Propiedades destacadas */}
-        <FeaturedProperties properties={FEATURED_PROPERTIES} />
+        {/* 4. Experiencia acumulada */}
+        <DataViz />
 
-        {/* 5. Mapa interactivo */}
+        {/* 5. Presencia donde importa */}
         <MapSection />
 
-        {/* 6. Administración premium */}
-        <Administration />
+        {/* 6. Cada dimensión del mercado */}
+        <ExperiencePanels />
 
-        {/* 7. Inventario dinámico */}
-        <Inventory properties={FEATURED_PROPERTIES} />
+        {/* 7. Administración premium */}
+        <Administration />
 
         {/* 8. Inversiones y oportunidades */}
         <Investments />
 
-        {/* 9. Visualización de datos */}
-        <DataViz />
-
-        {/* 10. Testimonios */}
+        {/* 9. Testimonios — TODO: conectar a DB */}
         <Testimonials testimonials={TESTIMONIALS} />
 
-        {/* 11. CTA premium */}
-        <CtaSection />
+        {/* 10. CTA premium — datos de contacto reales */}
+        <CtaSection
+          phone={contact.phone}
+          phoneHref={contact.phone_href}
+          email={contact.email}
+          hours={contact.hours}
+        />
       </main>
 
-      {/* 12. Footer cinematográfico */}
       <Footer />
     </>
   )

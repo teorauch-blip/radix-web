@@ -22,7 +22,8 @@ export function formatPrice(price: number, currency: string = 'USD'): string {
   }).format(price)
 }
 
-export function formatSurface(m2: number): string {
+export function formatSurface(m2: number | null | undefined): string {
+  if (m2 == null || m2 === 0) return '— m²'
   return `${new Intl.NumberFormat('es-AR').format(m2)} m²`
 }
 

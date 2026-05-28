@@ -1,60 +1,10 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { motion, useInView, AnimatePresence } from 'framer-motion'
+import { motion, useInView } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
-
-const PANELS = [
-  {
-    id: 'residencial',
-    number: '01',
-    label: 'Residencial',
-    title: 'Vivir con criterio',
-    description:
-      'Casas, apartamentos y desarrollos premium en las mejores ubicaciones de Salta y Buenos Aires. Arquitectura contemporánea, entornos curados.',
-    href: '/propiedades?categoria=residencial',
-    accent: '#0172C6',
-    metric: '+140 propiedades',
-    subMetric: 'activos residenciales',
-  },
-  {
-    id: 'comercial',
-    number: '02',
-    label: 'Comercial',
-    title: 'Espacios que producen',
-    description:
-      'Locales comerciales, oficinas y plantas industriales. Análisis de rentabilidad, due diligence jurídico y gestión integral del activo.',
-    href: '/propiedades?categoria=comercial',
-    accent: '#0E1B8C',
-    metric: '+60 propiedades',
-    subMetric: 'activos comerciales',
-  },
-  {
-    id: 'desarrollo',
-    number: '03',
-    label: 'Desarrollos',
-    title: 'Capital en movimiento',
-    description:
-      'Lotes estratégicos, proyectos en pozo y oportunidades de desarrollo. Identificamos el activo, estructuramos la operación, acompañamos el retorno.',
-    href: '/inversiones',
-    accent: '#0172C6',
-    metric: '+12 proyectos',
-    subMetric: 'en desarrollo activo',
-  },
-  {
-    id: 'administracion',
-    number: '04',
-    label: 'Administración',
-    title: 'Tu patrimonio, en orden',
-    description:
-      'Gestión profesional de carteras inmobiliarias. Cobranzas, mantenimiento, informes de rendimiento y optimización continua.',
-    href: '/administracion',
-    accent: '#0E1B8C',
-    metric: '96%',
-    subMetric: 'tasa de retención',
-  },
-]
+import { SERVICE_PANELS } from '@/lib/content/home'
 
 export function ExperiencePanels() {
   const ref = useRef<HTMLElement>(null)
@@ -62,7 +12,7 @@ export function ExperiencePanels() {
   const [activePanel, setActivePanel] = useState<string | null>(null)
 
   return (
-    <section ref={ref} className="section-padding bg-radix-dark">
+    <section ref={ref} className="section-padding bg-radix-navy">
       <div className="section-container">
         {/* Header */}
         <div className="grid lg:grid-cols-2 gap-8 mb-16">
@@ -92,13 +42,13 @@ export function ExperiencePanels() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           >
-            Operamos en todos los segmentos del mercado inmobiliario con la misma exigencia. Cuatro áreas de práctica, una sola vara de calidad.
+            Operamos en todos los segmentos del mercado inmobiliario con la misma exigencia y criterio profesional.
           </motion.p>
         </div>
 
         {/* Panel grid */}
         <div className="grid md:grid-cols-2 gap-4">
-          {PANELS.map((panel, i) => (
+          {SERVICE_PANELS.map((panel, i) => (
             <motion.div
               key={panel.id}
               initial={{ opacity: 0, y: 30 }}
@@ -119,16 +69,15 @@ export function ExperiencePanels() {
               />
 
               <div className="relative z-10 p-8">
-                {/* Number + label */}
-                <div className="flex items-center justify-between mb-6">
+                {/* Number */}
+                <div className="mb-8">
                   <span className="text-xs text-radix-text-4 font-mono tracking-widest">
                     {panel.number}
                   </span>
-                  <span className="highlight-badge">{panel.label}</span>
                 </div>
 
                 {/* Title */}
-                <h3 className="font-serif text-heading-1 text-white mb-4 group-hover:text-white transition-colors">
+                <h3 className="font-serif text-display-3 text-white mb-5 leading-none">
                   {panel.title}
                 </h3>
 
@@ -140,7 +89,7 @@ export function ExperiencePanels() {
                 {/* Bottom row */}
                 <div className="flex items-end justify-between">
                   <div>
-                    <div className="text-2xl font-light text-white">{panel.metric}</div>
+                    <div className="text-sm font-light text-radix-text-2">{panel.metric}</div>
                     <div className="text-xs text-radix-text-4 mt-1">{panel.subMetric}</div>
                   </div>
 

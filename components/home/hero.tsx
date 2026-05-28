@@ -3,13 +3,8 @@
 import { useRef } from 'react'
 import Link from 'next/link'
 import { motion, useScroll, useTransform } from 'framer-motion'
-import { ArrowUpRight, ChevronDown } from 'lucide-react'
-
-const STATS = [
-  { value: '+240', label: 'Operaciones concretadas' },
-  { value: '12+', label: 'Años de trayectoria' },
-  { value: 'USD 180M', label: 'En activos gestionados' },
-]
+import { ArrowUpRight } from 'lucide-react'
+import { HERO_LABEL, HERO_STATS } from '@/lib/content/home'
 
 export function Hero() {
   const containerRef = useRef<HTMLElement>(null)
@@ -19,122 +14,170 @@ export function Hero() {
     offset: ['start start', 'end start'],
   })
 
-  const opacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
-  const y = useTransform(scrollYProgress, [0, 1], [0, 120])
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.08])
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
+  const contentY = useTransform(scrollYProgress, [0, 1], [0, 110])
+  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.07])
+  const isotopeOpacity = useTransform(scrollYProgress, [0, 0.35], [0.012, 0])
 
   return (
     <section
       ref={containerRef}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-radix-void"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-radix-midnight"
     >
-      {/* Background layers */}
-      <motion.div style={{ scale }} className="absolute inset-0 z-0">
-        {/* Deep gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#06080E] via-[#080C14] to-[#04060A]" />
 
-        {/* Radial glow — center */}
+      {/* ── Atmospheric background ── */}
+      <motion.div style={{ scale: bgScale }} className="absolute inset-0 z-0">
+
+        {/* Base — midnight blue más claro */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1E3252] via-[#18283E] to-[#142236]" />
+
+        {/* Primary cinematic glow — center */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 70% 60% at 50% 40%, rgba(1,114,198,0.10) 0%, transparent 70%)',
+              'radial-gradient(ellipse 85% 65% at 46% 38%, rgba(12,90,155,0.16) 0%, transparent 62%)',
           }}
         />
 
-        {/* Corner accent */}
+        {/* Warm ambient — luz central suave */}
         <div
-          className="absolute top-0 right-0 w-[800px] h-[500px]"
+          className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse at top right, rgba(14,27,140,0.15) 0%, transparent 65%)',
+              'radial-gradient(ellipse 55% 42% at 50% 44%, rgba(175,135,80,0.048) 0%, transparent 54%)',
           }}
         />
 
-        {/* Grid overlay */}
+        {/* Upper-right depth */}
         <div
-          className="absolute inset-0 opacity-[0.035]"
+          className="absolute top-0 right-0 w-[1000px] h-[650px]"
+          style={{
+            background:
+              'radial-gradient(ellipse at top right, rgba(9,26,76,0.30) 0%, transparent 55%)',
+          }}
+        />
+
+        {/* Lower-left counter-light */}
+        <div
+          className="absolute bottom-0 left-0 w-[650px] h-[420px]"
+          style={{
+            background:
+              'radial-gradient(ellipse at bottom left, rgba(12,72,145,0.05) 0%, transparent 58%)',
+          }}
+        />
+
+        {/* Architectural grid */}
+        <div
+          className="absolute inset-0 opacity-[0.025]"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+              'linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px)',
             backgroundSize: '80px 80px',
           }}
         />
 
-        {/* Floating orbs */}
+        {/* Floating orbs — slow, cinematic */}
         <motion.div
-          className="absolute top-[20%] left-[15%] w-72 h-72 rounded-full blur-3xl"
-          style={{ background: 'rgba(1,114,198,0.07)' }}
-          animate={{ x: [0, 25, 0], y: [0, -15, 0] }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute top-[16%] left-[10%] w-80 h-80 rounded-full blur-3xl"
+          style={{ background: 'rgba(0,88,175,0.09)' }}
+          animate={{ x: [0, 30, 0], y: [0, -16, 0] }}
+          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
-          className="absolute bottom-[25%] right-[10%] w-96 h-96 rounded-full blur-3xl"
-          style={{ background: 'rgba(14,27,140,0.08)' }}
-          animate={{ x: [0, -20, 0], y: [0, 20, 0] }}
-          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute bottom-[20%] right-[6%] w-[480px] h-[480px] rounded-full blur-3xl"
+          style={{ background: 'rgba(10,22,110,0.10)' }}
+          animate={{ x: [0, -24, 0], y: [0, 24, 0] }}
+          transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute top-[42%] right-[30%] w-52 h-52 rounded-full blur-2xl"
+          style={{ background: 'rgba(155,115,45,0.042)' }}
+          animate={{ x: [0, 18, 0], y: [0, -12, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
         />
       </motion.div>
 
-      {/* Content */}
+      {/* ── Isotipo watermark ── ghost texture, atmospheric depth ── */}
       <motion.div
-        style={{ opacity, y }}
-        className="relative z-10 section-container pt-28 pb-16 w-full"
+        style={{ opacity: isotopeOpacity, filter: 'blur(5px) brightness(0) invert(1)' }}
+        className="absolute right-[-4%] lg:right-[2%] xl:right-[8%]
+                   top-1/2 -translate-y-[46%]
+                   w-[380px] h-[380px] sm:w-[500px] sm:h-[500px]
+                   lg:w-[620px] lg:h-[620px]
+                   pointer-events-none select-none"
+        aria-hidden="true"
       >
-        <div className="max-w-5xl">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/branding/radix-isotype.png"
+          alt=""
+          draggable={false}
+          className="w-full h-full object-contain"
+        />
+      </motion.div>
+
+      {/* ── Hero content ── */}
+      <motion.div
+        style={{ opacity: contentOpacity, y: contentY }}
+        className="relative z-10 section-container pt-32 pb-20 w-full"
+      >
+        <div className="max-w-[56rem]">
+
           {/* Location label */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="label-tag mb-10"
+            transition={{ duration: 0.9, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="label-tag mb-12"
           >
-            Salta · Buenos Aires · Argentina
+            {HERO_LABEL}
           </motion.div>
 
-          {/* Headline */}
-          <div className="overflow-hidden mb-2">
+          {/* Headline — line 1 */}
+          <div className="overflow-hidden mb-1">
             <motion.div
               initial={{ y: '110%' }}
               animate={{ y: 0 }}
-              transition={{ duration: 1.1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 1.2, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
             >
-              <h1 className="font-serif text-display-1 text-white leading-[0.92]">
+              <h1 className="text-display-1 text-white font-light leading-[0.92]">
                 Inmuebles que
               </h1>
             </motion.div>
           </div>
 
-          <div className="overflow-hidden mb-2">
+          {/* Headline — line 2 with editorial italic serif */}
+          <div className="overflow-hidden mb-3">
             <motion.div
               initial={{ y: '110%' }}
               animate={{ y: 0 }}
-              transition={{ duration: 1.1, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 1.2, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
             >
-              <h1 className="font-serif text-display-1 leading-[0.92]">
-                <span className="text-gradient">definen</span>{' '}
-                <span className="text-white">el estándar.</span>
+              <h1 className="text-display-1 font-light text-white leading-[0.92]">
+                <span className="font-serif italic font-normal">definen</span>{' '}
+                <span>el estándar.</span>
               </h1>
             </motion.div>
           </div>
 
           {/* Subline */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 1.0, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-8 text-radix-text-3 text-lg lg:text-xl font-light leading-relaxed max-w-xl"
+            transition={{ duration: 1, delay: 1.0, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-9 text-radix-text-3 text-lg lg:text-[1.15rem] font-light leading-relaxed max-w-[34rem]"
           >
             RADIX opera donde la estrategia y el diseño convergen.
-            Capital inmobiliario inteligente en el NOA y Buenos Aires.
+            Capital inmobiliario inteligente en el NOA.
           </motion.p>
 
           {/* CTAs */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-10 flex flex-wrap items-center gap-4"
+            transition={{ duration: 0.9, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-11 flex flex-wrap items-center gap-4"
           >
             <Link href="/propiedades" className="btn-primary">
               Ver portafolio
@@ -149,20 +192,20 @@ export function Hero() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1.2, delay: 1.5 }}
-            className="mt-20 pt-8 border-t border-radix-border/50 flex flex-wrap gap-10 lg:gap-16"
+            transition={{ duration: 1.4, delay: 1.5 }}
+            className="mt-24 pt-7 border-t border-white/[0.07] flex flex-wrap gap-12 lg:gap-20"
           >
-            {STATS.map((stat, i) => (
+            {HERO_STATS.map((stat, i) => (
               <motion.div
                 key={stat.label}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 1.6 + i * 0.12 }}
+                transition={{ duration: 0.7, delay: 1.6 + i * 0.12 }}
               >
-                <div className="text-3xl lg:text-4xl font-light text-white tracking-tight">
+                <div className="text-3xl lg:text-[2.25rem] font-light text-white tracking-tight leading-none">
                   {stat.value}
                 </div>
-                <div className="text-radix-text-4 text-xs mt-1.5 tracking-wide">
+                <div className="text-radix-text-4 text-[0.6rem] mt-2 tracking-[0.1em] uppercase font-normal">
                   {stat.label}
                 </div>
               </motion.div>
@@ -171,24 +214,31 @@ export function Hero() {
         </div>
       </motion.div>
 
-      {/* Scroll indicator */}
+      {/* ── Scroll indicator — animated line ── */}
       <motion.div
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-10"
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 2, duration: 1 }}
+        transition={{ delay: 2.2, duration: 1.2 }}
       >
-        <span className="text-radix-text-4 text-[0.6rem] tracking-[0.25em] uppercase">Explorar</span>
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <ChevronDown className="w-4 h-4 text-radix-text-4" />
-        </motion.div>
+        <span className="text-radix-text-4 text-[0.55rem] tracking-[0.3em] uppercase font-normal">
+          Scroll
+        </span>
+        <div className="relative w-px h-10 overflow-hidden bg-white/[0.08]">
+          <motion.div
+            className="absolute inset-x-0 top-0 h-full"
+            style={{
+              background:
+                'linear-gradient(to bottom, transparent, rgba(255,255,255,0.35), transparent)',
+            }}
+            animate={{ y: ['-100%', '200%'] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </div>
       </motion.div>
 
-      {/* Bottom fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-radix-void to-transparent z-10 pointer-events-none" />
+      {/* Bottom fade to next section */}
+      <div className="absolute bottom-0 left-0 right-0 h-60 bg-gradient-to-t from-radix-midnight to-transparent z-10 pointer-events-none" />
     </section>
   )
 }

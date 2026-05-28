@@ -1,7 +1,15 @@
 import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
+import { DM_Sans } from 'next/font/google'
 import './globals.css'
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-dm-sans',
+  weight: ['300', '400', '500', '600'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: {
@@ -9,15 +17,15 @@ export const metadata: Metadata = {
     template: '%s — RADIX',
   },
   description:
-    'Firma premium de real estate en Salta y Buenos Aires. Estrategia, diseño y precisión al servicio del capital inmobiliario.',
-  keywords: ['inmobiliaria', 'real estate', 'Salta', 'Buenos Aires', 'propiedades premium', 'inversiones inmobiliarias'],
+    'Firma premium de real estate en Salta y el NOA. Estrategia, diseño y precisión al servicio del capital inmobiliario.',
+  keywords: ['inmobiliaria', 'real estate', 'Salta', 'NOA', 'Valle de Lerma', 'propiedades premium', 'inversiones inmobiliarias'],
   authors: [{ name: 'RADIX Consultores Inmobiliarios' }],
   openGraph: {
     type: 'website',
     locale: 'es_AR',
     siteName: 'RADIX Consultores Inmobiliarios',
     title: 'RADIX Consultores Inmobiliarios',
-    description: 'Firma premium de real estate. Salta · Buenos Aires · Argentina.',
+    description: 'Firma premium de real estate. Salta · NOA · Argentina.',
   },
   twitter: {
     card: 'summary_large_image',
@@ -45,10 +53,9 @@ export default function RootLayout({
         <link href={instrumentSerifUrl} rel="stylesheet" />
       </head>
       <body
-        className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
+        className={`${GeistSans.variable} ${GeistMono.variable} ${dmSans.variable} antialiased`}
         style={
           {
-            '--font-geist-sans': GeistSans.variable,
             '--font-geist-mono': GeistMono.variable,
             '--font-instrument-serif': "'Instrument Serif'",
           } as React.CSSProperties

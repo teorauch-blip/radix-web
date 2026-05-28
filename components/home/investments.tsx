@@ -4,38 +4,20 @@ import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { TrendingUp, MapPin, Building2, ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
+import { INVESTMENT_AREAS } from '@/lib/content/home'
 
-const INVESTMENT_AREAS = [
-  {
-    icon: MapPin,
-    title: 'Salta Capital',
-    description: 'Centro histórico en revalorización, corredor de Av. Tavella y desarrollo residencial en Tres Ceibos.',
-    yield: '8–12% USD',
-    type: 'Renta + plusvalía',
-  },
-  {
-    icon: Building2,
-    title: 'NOA en expansión',
-    description: 'Jujuy, San Salvador y Valle de Lerma: mercados sub-penetrados con alto potencial de apreciación capital.',
-    yield: '10–15% USD',
-    type: 'Plusvalía',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Buenos Aires',
-    description: 'Reposicionamiento de activos comerciales en microcentro y desarrollos residenciales en Palermo y Belgrano.',
-    yield: '6–9% USD',
-    type: 'Renta corporativa',
-  },
-]
+const ICON_MAP = {
+  MapPin,
+  Building2,
+  TrendingUp,
+}
 
 export function Investments() {
   const ref = useRef<HTMLElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
   return (
-    <section ref={ref} className="section-padding relative overflow-hidden bg-radix-void">
-      {/* Background accent */}
+    <section ref={ref} className="section-padding relative overflow-hidden bg-radix-abyss">
       <div
         className="absolute top-0 left-0 right-0 h-px"
         style={{
@@ -74,7 +56,7 @@ export function Investments() {
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             >
-              El NOA está posicionándose como uno de los mercados de mayor proyección en Argentina. RADIX identifica, estructura y ejecuta las oportunidades antes de que sean obvias.
+              El NOA tiene un mercado en crecimiento sostenido. RADIX acompaña operaciones de inversión con criterio profesional y conocimiento local del mercado salteño.
             </motion.p>
           </div>
         </div>
@@ -82,7 +64,7 @@ export function Investments() {
         {/* Investment cards */}
         <div className="grid md:grid-cols-3 gap-5 mb-14">
           {INVESTMENT_AREAS.map((area, i) => {
-            const Icon = area.icon
+            const Icon = ICON_MAP[area.iconName]
             return (
               <motion.div
                 key={area.title}
@@ -93,12 +75,11 @@ export function Investments() {
                            hover:border-radix-border-2 hover:bg-radix-surface-2
                            transition-all duration-500 ease-radix relative overflow-hidden"
               >
-                {/* Hover glow */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
                      style={{ background: 'radial-gradient(ellipse at 30% 30%, rgba(1,114,198,0.08) 0%, transparent 70%)' }} />
 
                 <div className="relative z-10">
-                  <div className="w-10 h-10 rounded-xl bg-radix-blue/10 border border-radix-blue/20
+                  <div className="w-10 h-10 rounded-xl bg-radix-blue/[0.10] border border-radix-blue/[0.20]
                                   flex items-center justify-center mb-5">
                     <Icon className="w-5 h-5 text-radix-blue" />
                   </div>
@@ -108,11 +89,8 @@ export function Investments() {
 
                   <div className="pt-5 border-t border-radix-border">
                     <div className="flex items-end justify-between">
-                      <div>
-                        <div className="text-xs text-radix-text-4 mb-1">Retorno estimado</div>
-                        <div className="text-xl font-light text-white">{area.yield}</div>
-                      </div>
-                      <span className="highlight-badge">{area.type}</span>
+                      <span className="highlight-badge">{area.badge}</span>
+                      <span className="text-xs text-radix-text-4">{area.type}</span>
                     </div>
                   </div>
                 </div>
@@ -124,15 +102,15 @@ export function Investments() {
         {/* CTA row */}
         <motion.div
           className="flex flex-col sm:flex-row items-center justify-between gap-6 p-8 rounded-2xl
-                     bg-gradient-to-r from-radix-blue/10 to-radix-blue-dark/10
-                     border border-radix-blue/20"
+                     bg-gradient-to-r from-radix-blue/[0.10] to-radix-blue-dark/[0.10]
+                     border border-radix-blue/[0.20]"
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
         >
           <div>
             <div className="text-white font-medium mb-1">¿Buscás una oportunidad de inversión?</div>
-            <div className="text-radix-text-3 text-sm">Nuestro equipo analiza tu perfil y te presenta activos que matchean con tus objetivos.</div>
+            <div className="text-radix-text-3 text-sm">Nuestro equipo analiza tu perfil y te presenta activos que se ajustan a tus objetivos.</div>
           </div>
           <Link href="/inversiones" className="btn-primary whitespace-nowrap">
             Ver oportunidades
