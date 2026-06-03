@@ -12,6 +12,7 @@ import type {
   WebConfigServicios,
   WebConfigAdministracionHome,
   WebConfigInversionesHome,
+  WebConfigTestimonios,
   HeroConfig,
   SobreRadixConfig,
   MetricaItem,
@@ -20,6 +21,7 @@ import type {
   ServiciosConfig,
   AdministracionHomeConfig,
   InversionesHomeConfig,
+  TestimoniosConfig,
 } from '@/lib/types/db'
 import { CONTACT, WHATSAPP_NUMBER } from '@/lib/content/contact'
 import { COMPANY, COMPANY_ABOUT } from '@/lib/content/company'
@@ -31,6 +33,7 @@ import {
   SERVICE_PANELS,
   INVESTMENT_AREAS,
 } from '@/lib/content/home'
+import { TESTIMONIALS } from '@/lib/mock-data'
 
 // Cliente para config.
 // Cache alineado con el ISR de la página (revalidate = 300 en page.tsx).
@@ -371,5 +374,43 @@ export async function getInversionesHomeConfig(): Promise<InversionesHomeConfig>
     bannerCtaLabel: db?.banner_cta_label || 'Ver oportunidades',
     bannerCtaHref:  db?.banner_cta_href  || '/inversiones',
     areas,
+  }
+}
+
+// ─── Testimonios ──────────────────────────────────────────────
+
+export type { TestimoniosConfig }
+
+export async function getTestimoniosConfig(): Promise<TestimoniosConfig> {
+  const db = await fetchConfig<WebConfigTestimonios>('testimonios')
+
+  // Filtra inactivos, ordena por order
+  const cmsItems = (db?.items ?? [])
+    .filter(item => item.active !== false)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+
+  const items = cmsItems.length
+    ? cmsItems.map((item, i) => ({
+        id:      String(i + 1),
+        name:    item.name    || '',
+        role:    item.role    || '',
+        company: item.company || '',
+        content: item.content || '',
+        rating:  typeof item.rating === 'number' ? item.rating : 5,
+      }))
+    : TESTIMONIALS.map(t => ({
+        id:      t.id,
+        name:    t.name,
+        role:    t.role    ?? '',
+        company: t.company ?? '',
+        content: t.content,
+        rating:  t.rating,
+      }))
+
+  return {
+    label:     db?.section_label || 'Testimonios',
+    titleLine1: db?.title_line_1 || 'Lo que dice',
+    titleLine2: db?.title_line_2 || 'quien confía en RADIX.',
+    items,
   }
 }

@@ -324,3 +324,36 @@ export interface InversionesHomeConfig {
   bannerCtaHref: string
   areas: InversionesArea[]
 }
+
+// ─── Testimonios ──────────────────────────────────────────────
+
+export interface WebConfigTestimonios {
+  section_label?: string
+  title_line_1?: string
+  title_line_2?: string
+  items?: Array<{
+    name?: string
+    role?: string
+    company?: string
+    content?: string
+    rating?: number
+    active?: boolean
+    order?: number
+  }>
+}
+
+export interface TestimonioItem {
+  id: string
+  name: string
+  role: string
+  company: string
+  content: string
+  rating: number
+}
+
+export interface TestimoniosConfig {
+  label: string
+  titleLine1: string
+  titleLine2: string
+  items: TestimonioItem[]
+}

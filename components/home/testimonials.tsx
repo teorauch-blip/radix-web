@@ -5,8 +5,15 @@ import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Quote } from 'lucide-react'
 import { Testimonial } from '@/types'
 
+interface TestimonialsCmsHeader {
+  label: string
+  titleLine1: string
+  titleLine2: string
+}
+
 interface TestimonialsProps {
   testimonials: Testimonial[]
+  cms?: TestimonialsCmsHeader
 }
 
 function StarRating({ rating }: { rating: number }) {
@@ -24,9 +31,13 @@ function StarRating({ rating }: { rating: number }) {
   )
 }
 
-export function Testimonials({ testimonials }: TestimonialsProps) {
+export function Testimonials({ testimonials, cms }: TestimonialsProps) {
   const ref = useRef<HTMLElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
+
+  const label     = cms?.label     || 'Testimonios'
+  const titleLine1 = cms?.titleLine1 || 'Lo que dice'
+  const titleLine2 = cms?.titleLine2 || 'quien confía en RADIX.'
   const [current, setCurrent] = useState(0)
   const [direction, setDirection] = useState(1)
 
@@ -62,7 +73,7 @@ export function Testimonials({ testimonials }: TestimonialsProps) {
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ duration: 0.7 }}
           >
-            Testimonios
+            {label}
           </motion.div>
           <motion.h2
             className="font-serif text-display-3 text-white"
@@ -70,9 +81,9 @@ export function Testimonials({ testimonials }: TestimonialsProps) {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.9, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
           >
-            Lo que dice
+            {titleLine1}
             <br />
-            quien confía en RADIX.
+            {titleLine2}
           </motion.h2>
         </div>
 

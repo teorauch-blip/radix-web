@@ -21,15 +21,15 @@ import {
   getServiciosConfig,
   getAdministracionHomeConfig,
   getInversionesHomeConfig,
+  getTestimoniosConfig,
 } from '@/lib/data/web-config'
-import { TESTIMONIALS } from '@/lib/mock-data'
 
 export const revalidate = 300
 
 export default async function HomePage() {
   const [
     rawProps, contact, hero, sobreRadix, metricas, ctaFinal,
-    territorio, servicios, administracion, inversiones,
+    territorio, servicios, administracion, inversiones, testimoniosConfig,
   ] = await Promise.all([
     getPropiedadesPublicas({ limit: 9 }),
     getContactConfig(),
@@ -41,6 +41,7 @@ export default async function HomePage() {
     getServiciosConfig(),
     getAdministracionHomeConfig(),
     getInversionesHomeConfig(),
+    getTestimoniosConfig(),
   ])
 
   // LOG TEMPORAL — ver en terminal del servidor
@@ -79,8 +80,15 @@ export default async function HomePage() {
         {/* 8. Inversiones y oportunidades */}
         <Investments cms={inversiones} />
 
-        {/* 9. Testimonios — TODO: conectar a DB */}
-        <Testimonials testimonials={TESTIMONIALS} />
+        {/* 9. Testimonios */}
+        <Testimonials
+          testimonials={testimoniosConfig.items}
+          cms={{
+            label:     testimoniosConfig.label,
+            titleLine1: testimoniosConfig.titleLine1,
+            titleLine2: testimoniosConfig.titleLine2,
+          }}
+        />
 
         {/* 10. CTA premium — datos de contacto reales */}
         <CtaSection
