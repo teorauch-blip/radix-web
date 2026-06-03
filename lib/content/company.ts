@@ -26,6 +26,6 @@ export const COMPANY_ABOUT = {
   details: [
     { label: 'Salta Capital', sub: 'Sede principal' },
     { label: 'Salta · NOA', sub: 'Área de operación' },
-    { label: 'Matrículas 656 · 291', sub: 'CMCPRA · Habilitación profesional' },
+    { label: 'Matrículas 656 · 291', sub: 'CUSIS · Habilitación profesional' },
   ],
 } as const

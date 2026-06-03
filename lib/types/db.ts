@@ -109,6 +109,12 @@ export interface WebConfigSobreRadix {
   founder_name?: string
   founder_role?: string
   years_active?: string
+  detail_1_label?: string
+  detail_1_sublabel?: string
+  detail_2_label?: string
+  detail_2_sublabel?: string
+  detail_3_label?: string
+  detail_3_sublabel?: string
 }
 
 export interface WebConfigMetricaItem {
@@ -146,11 +152,17 @@ export interface HeroConfig {
   secondaryCtaHref: string
 }
 
+export interface SobreRadixDetail {
+  label: string
+  sub: string
+}
+
 export interface SobreRadixConfig {
   label: string
   titleLine1: string
   titleLine2: string
   paragraphs: string[]
+  details: SobreRadixDetail[]
 }
 
 export interface MetricaItem {
@@ -356,4 +368,105 @@ export interface TestimoniosConfig {
   titleLine1: string
   titleLine2: string
   items: TestimonioItem[]
+}
+
+// ─── Inventario Home ──────────────────────────────────────────
+
+export interface WebConfigInventarioHome {
+  label?: string
+  title_1?: string
+  title_2?: string
+  empty_message?: string
+  filters_button_label?: string
+  filters_button_href?: string
+  view_all_label?: string
+  view_all_href?: string
+  max_display?: number
+}
+
+export interface InventarioHomeConfig {
+  label: string
+  titleLine1: string
+  titleLine2: string
+  emptyMessage: string
+  filtersButtonLabel: string
+  filtersButtonHref: string
+  viewAllLabel: string
+  viewAllHref: string
+  maxDisplay: number
+}
+
+// ─── Navbar ───────────────────────────────────────────────────
+
+export interface WebConfigNavbar {
+  nav_cta_label?: string
+  nav_cta_href?: string
+  nav_links?: Array<{
+    label?: string
+    href?: string
+    active?: boolean
+    order?: number
+  }>
+}
+
+export interface NavbarLink {
+  label: string
+  href: string
+}
+
+export interface NavbarConfig {
+  ctaLabel: string
+  ctaHref: string
+  navLinks: NavbarLink[]
+}
+
+// ─── Footer ───────────────────────────────────────────────────
+
+export interface WebConfigFooter {
+  tagline?: string
+  servicios_title?: string
+  servicios_links?: Array<{
+    label?: string
+    href?: string
+    active?: boolean
+    order?: number
+  }>
+  empresa_title?: string
+  empresa_links?: Array<{
+    label?: string
+    href?: string
+    active?: boolean
+    order?: number
+  }>
+  newsletter_title?: string
+  newsletter_description?: string
+  newsletter_placeholder?: string
+  newsletter_button_label?: string
+  copyright_entity?: string
+  privacy_label?: string
+  privacy_href?: string
+  terms_label?: string
+  terms_href?: string
+}
+
+export interface FooterLinkItem {
+  label: string
+  href: string
+}
+
+export interface FooterConfig {
+  tagline: string
+  serviciosTitle: string
+  serviciosLinks: FooterLinkItem[]
+  empresaTitle: string
+  empresaLinks: FooterLinkItem[]
+  newsletterTitle: string
+  newsletterDescription: string
+  newsletterPlaceholder: string
+  newsletterButtonLabel: string
+  copyrightEntity: string
+  privacyLabel: string
+  privacyHref: string
+  termsLabel: string
+  termsHref: string
 }

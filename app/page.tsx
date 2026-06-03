@@ -22,6 +22,7 @@ import {
   getAdministracionHomeConfig,
   getInversionesHomeConfig,
   getTestimoniosConfig,
+  getInventarioHomeConfig,
 } from '@/lib/data/web-config'
 
 export const revalidate = 300
@@ -29,9 +30,9 @@ export const revalidate = 300
 export default async function HomePage() {
   const [
     rawProps, contact, hero, sobreRadix, metricas, ctaFinal,
-    territorio, servicios, administracion, inversiones, testimoniosConfig,
+    territorio, servicios, administracion, inversiones, testimoniosConfig, inventario,
   ] = await Promise.all([
-    getPropiedadesPublicas({ limit: 9 }),
+    getPropiedadesPublicas({ limit: 50 }),
     getContactConfig(),
     getHeroConfig(),
     getSobreRadixConfig(),
@@ -42,6 +43,7 @@ export default async function HomePage() {
     getAdministracionHomeConfig(),
     getInversionesHomeConfig(),
     getTestimoniosConfig(),
+    getInventarioHomeConfig(),
   ])
 
   // LOG TEMPORAL — ver en terminal del servidor
@@ -63,7 +65,7 @@ export default async function HomePage() {
         <Intro cms={sobreRadix} />
 
         {/* 3. Propiedades disponibles — datos reales */}
-        <Inventory properties={properties} />
+        <Inventory properties={properties} cms={inventario} />
 
         {/* 4. Experiencia acumulada */}
         <DataViz metrics={metricas} />

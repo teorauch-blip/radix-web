@@ -2,7 +2,15 @@
 
 import { ArrowUpRight } from 'lucide-react'
 
-export function NewsletterForm() {
+interface NewsletterFormProps {
+  placeholder?: string
+  buttonLabel?: string
+}
+
+export function NewsletterForm({
+  placeholder = 'tu@email.com',
+  buttonLabel = 'Suscribirme',
+}: NewsletterFormProps = {}) {
   return (
     <form
       className="flex flex-col gap-3"
@@ -13,13 +21,13 @@ export function NewsletterForm() {
     >
       <input
         type="email"
-        placeholder="tu@email.com"
+        placeholder={placeholder}
         className="w-full px-4 py-3 text-sm bg-radix-surface border border-radix-border rounded-xl
                    text-radix-text-2 placeholder:text-radix-text-4
                    focus:outline-none focus:border-radix-blue/50 transition-colors"
       />
       <button type="submit" className="btn-outline text-xs py-2.5">
-        Suscribirme
+        {buttonLabel}
         <ArrowUpRight className="w-3.5 h-3.5" />
       </button>
     </form>

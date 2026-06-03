@@ -13,8 +13,12 @@ import type {
   WebConfigAdministracionHome,
   WebConfigInversionesHome,
   WebConfigTestimonios,
+  WebConfigInventarioHome,
+  WebConfigNavbar,
+  WebConfigFooter,
   HeroConfig,
   SobreRadixConfig,
+  SobreRadixDetail,
   MetricaItem,
   CtaFinalConfig,
   TeritorioConfig,
@@ -22,6 +26,11 @@ import type {
   AdministracionHomeConfig,
   InversionesHomeConfig,
   TestimoniosConfig,
+  InventarioHomeConfig,
+  NavbarConfig,
+  NavbarLink,
+  FooterConfig,
+  FooterLinkItem,
 } from '@/lib/types/db'
 import { CONTACT, WHATSAPP_NUMBER } from '@/lib/content/contact'
 import { COMPANY, COMPANY_ABOUT } from '@/lib/content/company'
@@ -184,6 +193,22 @@ export type { SobreRadixConfig }
 
 export async function getSobreRadixConfig(): Promise<SobreRadixConfig> {
   const db = await fetchConfig<WebConfigSobreRadix>('sobre_radix')
+
+  const details: SobreRadixDetail[] = [
+    {
+      label: db?.detail_1_label    || COMPANY_ABOUT.details[0].label,
+      sub:   db?.detail_1_sublabel || COMPANY_ABOUT.details[0].sub,
+    },
+    {
+      label: db?.detail_2_label    || COMPANY_ABOUT.details[1].label,
+      sub:   db?.detail_2_sublabel || COMPANY_ABOUT.details[1].sub,
+    },
+    {
+      label: db?.detail_3_label    || COMPANY_ABOUT.details[2].label,
+      sub:   db?.detail_3_sublabel || COMPANY_ABOUT.details[2].sub,
+    },
+  ]
+
   return {
     label:      db?.intro_label        ?? COMPANY_ABOUT.label,
     titleLine1: db?.intro_title_line_1 ?? COMPANY_ABOUT.headlineLines[0],
@@ -191,6 +216,7 @@ export async function getSobreRadixConfig(): Promise<SobreRadixConfig> {
     paragraphs: db
       ? [db.intro_paragraph_1, db.intro_paragraph_2, db.intro_paragraph_3].filter(Boolean) as string[]
       : [...COMPANY_ABOUT.paragraphs],
+    details,
   }
 }
 
@@ -412,5 +438,104 @@ export async function getTestimoniosConfig(): Promise<TestimoniosConfig> {
     titleLine1: db?.title_line_1 || 'Lo que dice',
     titleLine2: db?.title_line_2 || 'quien confía en RADIX.',
     items,
+  }
+}
+
+// ─── Inventario Home ──────────────────────────────────────────
+
+export type { InventarioHomeConfig }
+
+export async function getInventarioHomeConfig(): Promise<InventarioHomeConfig> {
+  const db = await fetchConfig<WebConfigInventarioHome>('inventario_home')
+  return {
+    label:              db?.label                || 'Inventario',
+    titleLine1:         db?.title_1              || 'Propiedades',
+    titleLine2:         db?.title_2              || 'disponibles.',
+    emptyMessage:       db?.empty_message        || 'No hay propiedades en esta categoría por el momento.',
+    filtersButtonLabel: db?.filters_button_label || 'Buscar con filtros',
+    filtersButtonHref:  db?.filters_button_href  || '/propiedades',
+    viewAllLabel:       db?.view_all_label       || 'Ver todas',
+    viewAllHref:        db?.view_all_href        || '/propiedades',
+    maxDisplay:         typeof db?.max_display === 'number' ? db.max_display : 6,
+  }
+}
+
+// ─── Navbar ───────────────────────────────────────────────────
+
+export type { NavbarConfig, NavbarLink }
+
+const DEFAULT_NAV_LINKS: NavbarLink[] = [
+  { label: 'Propiedades',    href: '/propiedades' },
+  { label: 'Inversiones',    href: '/inversiones' },
+  { label: 'Administración', href: '/administracion' },
+  { label: 'Nosotros',       href: '/nosotros' },
+]
+
+export async function getNavbarConfig(): Promise<NavbarConfig> {
+  const db = await fetchConfig<WebConfigNavbar>('navbar')
+
+  const cmsLinks = (db?.nav_links ?? []).filter(l => l.active !== false)
+  const navLinks: NavbarLink[] = cmsLinks.length
+    ? cmsLinks
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .map(l => ({ label: l.label || '', href: l.href || '/' }))
+    : DEFAULT_NAV_LINKS
+
+  return {
+    ctaLabel: db?.nav_cta_label || 'Hablar con un asesor',
+    ctaHref:  db?.nav_cta_href  || '/contacto',
+    navLinks,
+  }
+}
+
+// ─── Footer ───────────────────────────────────────────────────
+
+export type { FooterConfig, FooterLinkItem }
+
+function parseCmsFooterLinks(
+  raw: Array<{ label?: string; href?: string; active?: boolean; order?: number }> | undefined,
+): FooterLinkItem[] {
+  return (raw ?? [])
+    .filter(l => l.active !== false)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .map(l => ({ label: l.label || '', href: l.href || '/' }))
+}
+
+const DEFAULT_FOOTER_SERVICIOS: FooterLinkItem[] = [
+  { label: 'Compra y venta',   href: '/propiedades' },
+  { label: 'Alquileres',       href: '/propiedades?tipo=alquiler' },
+  { label: 'Inversiones',      href: '/inversiones' },
+  { label: 'Administración',   href: '/administracion' },
+  { label: 'Desarrollos',      href: '/propiedades?tipo=desarrollo' },
+]
+
+const DEFAULT_FOOTER_EMPRESA: FooterLinkItem[] = [
+  { label: 'Nosotros',    href: '/nosotros' },
+  { label: 'Equipo',      href: '/nosotros#equipo' },
+  { label: 'Trayectoria', href: '/nosotros#historia' },
+  { label: 'Contacto',    href: '/contacto' },
+]
+
+export async function getFooterConfig(): Promise<FooterConfig> {
+  const db = await fetchConfig<WebConfigFooter>('footer')
+
+  const serviciosLinks = parseCmsFooterLinks(db?.servicios_links)
+  const empresaLinks   = parseCmsFooterLinks(db?.empresa_links)
+
+  return {
+    tagline:              db?.tagline               || '',
+    serviciosTitle:       db?.servicios_title       || 'Servicios',
+    serviciosLinks:       serviciosLinks.length     ? serviciosLinks : DEFAULT_FOOTER_SERVICIOS,
+    empresaTitle:         db?.empresa_title         || 'Empresa',
+    empresaLinks:         empresaLinks.length       ? empresaLinks   : DEFAULT_FOOTER_EMPRESA,
+    newsletterTitle:      db?.newsletter_title      || 'Oportunidades',
+    newsletterDescription: db?.newsletter_description || 'Recibí alertas de propiedades exclusivas antes de su publicación general.',
+    newsletterPlaceholder: db?.newsletter_placeholder || 'tu@email.com',
+    newsletterButtonLabel: db?.newsletter_button_label || 'Suscribirme',
+    copyrightEntity:      db?.copyright_entity      || 'RADIX Consultores Inmobiliarios',
+    privacyLabel:         db?.privacy_label         || 'Privacidad',
+    privacyHref:          db?.privacy_href          || '/privacidad',
+    termsLabel:           db?.terms_label           || 'Términos',
+    termsHref:            db?.terms_href            || '/terminos',
   }
 }
