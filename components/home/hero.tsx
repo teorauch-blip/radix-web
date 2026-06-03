@@ -5,14 +5,35 @@ import Link from 'next/link'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import { HERO_LABEL, HERO_STATS } from '@/lib/content/home'
+import type { HeroConfig } from '@/lib/types/db'
 
-export function Hero() {
+interface HeroProps {
+  cms?: HeroConfig
+}
+
+export function Hero({ cms }: HeroProps = {}) {
   const containerRef = useRef<HTMLElement>(null)
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end start'],
   })
+
+  const label             = cms?.label             ?? HERO_LABEL
+  // || en lugar de ?? para que strings vacíos ("") también activen el fallback
+  const titleLine1        = cms?.titleLine1        || 'Inmuebles que'
+  const titleLine2        = cms?.titleLine2        || 'definen el estándar.'
+  const subtitle          = cms?.subtitle          ?? 'RADIX opera donde la estrategia y el diseño convergen. Capital inmobiliario inteligente en el NOA.'
+  const primaryCtaLabel   = cms?.primaryCtaLabel   ?? 'Ver portafolio'
+  const primaryCtaHref    = cms?.primaryCtaHref    ?? '/propiedades'
+  const secondaryCtaLabel = cms?.secondaryCtaLabel ?? 'Hablar con un asesor'
+  const secondaryCtaHref  = cms?.secondaryCtaHref  ?? '/contacto'
+
+  // La primera palabra de la línea 2 siempre recibe el tratamiento italic/serif.
+  // Con el fallback garantizado arriba, titleLine2 nunca es vacío.
+  const spaceIdx       = titleLine2.indexOf(' ')
+  const titleLine2First = spaceIdx === -1 ? titleLine2 : titleLine2.slice(0, spaceIdx)
+  const titleLine2Tail  = spaceIdx === -1 ? ''         : titleLine2.slice(spaceIdx + 1)
 
   const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
   const contentY = useTransform(scrollYProgress, [0, 1], [0, 110])
@@ -131,7 +152,7 @@ export function Hero() {
             transition={{ duration: 0.9, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="label-tag mb-12"
           >
-            {HERO_LABEL}
+            {label}
           </motion.div>
 
           {/* Headline — line 1 */}
@@ -142,7 +163,7 @@ export function Hero() {
               transition={{ duration: 1.2, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
             >
               <h1 className="text-display-1 text-white font-light leading-[0.92]">
-                Inmuebles que
+                {titleLine1}
               </h1>
             </motion.div>
           </div>
@@ -155,8 +176,8 @@ export function Hero() {
               transition={{ duration: 1.2, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
             >
               <h1 className="text-display-1 font-light text-white leading-[0.92]">
-                <span className="font-serif italic font-normal">definen</span>{' '}
-                <span>el estándar.</span>
+                <span className="font-serif italic font-normal">{titleLine2First}</span>
+                {titleLine2Tail && <>{' '}<span>{titleLine2Tail}</span></>}
               </h1>
             </motion.div>
           </div>
@@ -168,8 +189,7 @@ export function Hero() {
             transition={{ duration: 1, delay: 1.0, ease: [0.22, 1, 0.36, 1] }}
             className="mt-9 text-radix-text-3 text-lg lg:text-[1.15rem] font-light leading-relaxed max-w-[34rem]"
           >
-            RADIX opera donde la estrategia y el diseño convergen.
-            Capital inmobiliario inteligente en el NOA.
+            {subtitle}
           </motion.p>
 
           {/* CTAs */}
@@ -179,12 +199,12 @@ export function Hero() {
             transition={{ duration: 0.9, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
             className="mt-11 flex flex-wrap items-center gap-4"
           >
-            <Link href="/propiedades" className="btn-primary">
-              Ver portafolio
+            <Link href={primaryCtaHref} className="btn-primary">
+              {primaryCtaLabel}
               <ArrowUpRight className="w-4 h-4" />
             </Link>
-            <Link href="/contacto" className="btn-ghost">
-              Hablar con un asesor
+            <Link href={secondaryCtaHref} className="btn-ghost">
+              {secondaryCtaLabel}
             </Link>
           </motion.div>
 

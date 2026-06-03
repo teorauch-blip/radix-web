@@ -85,3 +85,242 @@ export interface WebConfigSeo {
   seo_og_description?: string
   seo_og_image?: string
 }
+
+// ─── Home sections ────────────────────────────────────────────
+
+export interface WebConfigHero {
+  hero_label?: string
+  hero_title_line_1?: string
+  hero_title_line_2?: string
+  hero_subtitle?: string
+  hero_primary_cta_label?: string
+  hero_primary_cta_href?: string
+  hero_secondary_cta_label?: string
+  hero_secondary_cta_href?: string
+}
+
+export interface WebConfigSobreRadix {
+  intro_label?: string
+  intro_title_line_1?: string
+  intro_title_line_2?: string
+  intro_paragraph_1?: string
+  intro_paragraph_2?: string
+  intro_paragraph_3?: string
+  founder_name?: string
+  founder_role?: string
+  years_active?: string
+}
+
+export interface WebConfigMetricaItem {
+  value?: string
+  prefix?: string
+  suffix?: string
+  label?: string
+  sublabel?: string
+}
+
+export interface WebConfigMetricas {
+  items?: WebConfigMetricaItem[]
+}
+
+export interface WebConfigCtaFinal {
+  cta_label?: string
+  cta_headline_1?: string
+  cta_headline_2?: string
+  cta_subtitle?: string
+  cta_primary_label?: string
+  cta_primary_href?: string
+  cta_location_line?: string
+}
+
+// ─── Component-facing config shapes ──────────────────────────
+
+export interface HeroConfig {
+  label: string
+  titleLine1: string
+  titleLine2: string
+  subtitle: string
+  primaryCtaLabel: string
+  primaryCtaHref: string
+  secondaryCtaLabel: string
+  secondaryCtaHref: string
+}
+
+export interface SobreRadixConfig {
+  label: string
+  titleLine1: string
+  titleLine2: string
+  paragraphs: string[]
+}
+
+export interface MetricaItem {
+  value: number
+  prefix: string
+  suffix: string
+  label: string
+  sub: string
+}
+
+export interface CtaFinalConfig {
+  ctaLabel: string
+  headline1: string
+  headline2: string
+  subtitle: string
+  primaryCtaLabel: string
+  primaryCtaHref: string
+  locationLine: string
+}
+
+// ─── Territorio ───────────────────────────────────────────────
+
+export interface WebConfigTerritorio {
+  territory_label?: string
+  territory_title_1?: string
+  territory_title_2?: string
+  territory_subtitle?: string
+  coming_soon_text?: string
+  coming_soon_cities?: string[]
+  locations?: Array<{
+    name?: string
+    badge?: string
+    address?: string
+    description?: string
+    active?: boolean
+    order?: number
+  }>
+}
+
+export interface TeritorioLocation {
+  name: string
+  badge: string
+  address: string
+  description: string
+}
+
+export interface TeritorioConfig {
+  label: string
+  titleLine1: string
+  titleLine2: string
+  subtitle: string
+  comingSoonText: string
+  comingSoonCities: string[]
+  locations: TeritorioLocation[]
+}
+
+// ─── Servicios ────────────────────────────────────────────────
+
+export interface WebConfigServicios {
+  section_label?: string
+  section_title_1?: string
+  section_title_2?: string
+  section_subtitle?: string
+  panels?: Array<{
+    title?: string
+    description?: string
+    metric?: string
+    subMetric?: string
+    href?: string
+    active?: boolean
+    order?: number
+  }>
+}
+
+export interface ServiciosPanel {
+  title: string
+  description: string
+  metric: string
+  subMetric: string
+  href: string
+}
+
+export interface ServiciosConfig {
+  label: string
+  titleLine1: string
+  titleLine2: string
+  subtitle: string
+  panels: ServiciosPanel[]
+}
+
+// ─── Administración Home ──────────────────────────────────────
+
+export interface WebConfigAdministracionHome {
+  label?: string
+  title_1?: string
+  title_2?: string
+  paragraph?: string
+  cta_primary_label?: string
+  cta_primary_href?: string
+  cta_secondary_label?: string
+  cta_secondary_href?: string
+  metric_1_value?: string
+  metric_1_label?: string
+  metric_2_value?: string
+  metric_2_label?: string
+  features?: Array<{
+    title?: string
+    description?: string
+    active?: boolean
+    order?: number
+  }>
+}
+
+export interface AdministracionFeature {
+  title: string
+  description: string
+}
+
+export interface AdministracionHomeConfig {
+  label: string
+  titleLine1: string
+  titleLine2: string
+  paragraph: string
+  ctaPrimaryLabel: string
+  ctaPrimaryHref: string
+  ctaSecondaryLabel: string
+  ctaSecondaryHref: string
+  metric1Value: string
+  metric1Label: string
+  metric2Value: string
+  metric2Label: string
+  features: AdministracionFeature[]
+}
+
+// ─── Inversiones Home ─────────────────────────────────────────
+
+export interface WebConfigInversionesHome {
+  label?: string
+  title_1?: string
+  title_2?: string
+  paragraph?: string
+  banner_question?: string
+  banner_sub?: string
+  banner_cta_label?: string
+  banner_cta_href?: string
+  areas?: Array<{
+    title?: string
+    description?: string
+    badge?: string
+    type?: string
+    active?: boolean
+    order?: number
+  }>
+}
+
+export interface InversionesArea {
+  title: string
+  description: string
+  badge: string
+  type: string
+}
+
+export interface InversionesHomeConfig {
+  label: string
+  titleLine1: string
+  titleLine2: string
+  paragraph: string
+  bannerQuestion: string
+  bannerSub: string
+  bannerCtaLabel: string
+  bannerCtaHref: string
+  areas: InversionesArea[]
+}

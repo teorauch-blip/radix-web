@@ -11,16 +11,43 @@ import { Investments } from '@/components/home/investments'
 import { Testimonials } from '@/components/home/testimonials'
 import { CtaSection } from '@/components/home/cta-section'
 import { getPropiedadesPublicas, adaptPropiedad } from '@/lib/data/propiedades'
-import { getContactConfig } from '@/lib/data/web-config'
+import {
+  getContactConfig,
+  getHeroConfig,
+  getSobreRadixConfig,
+  getMetricasConfig,
+  getCtaFinalConfig,
+  getTeritorioConfig,
+  getServiciosConfig,
+  getAdministracionHomeConfig,
+  getInversionesHomeConfig,
+} from '@/lib/data/web-config'
 import { TESTIMONIALS } from '@/lib/mock-data'
 
 export const revalidate = 300
 
 export default async function HomePage() {
-  const [rawProps, contact] = await Promise.all([
+  const [
+    rawProps, contact, hero, sobreRadix, metricas, ctaFinal,
+    territorio, servicios, administracion, inversiones,
+  ] = await Promise.all([
     getPropiedadesPublicas({ limit: 9 }),
     getContactConfig(),
+    getHeroConfig(),
+    getSobreRadixConfig(),
+    getMetricasConfig(),
+    getCtaFinalConfig(),
+    getTeritorioConfig(),
+    getServiciosConfig(),
+    getAdministracionHomeConfig(),
+    getInversionesHomeConfig(),
   ])
+
+  // LOG TEMPORAL — ver en terminal del servidor
+  console.log('[home] hero resolved:',      JSON.stringify(hero))
+  console.log('[home] sobreRadix resolved:', JSON.stringify(sobreRadix))
+  console.log('[home] metricas resolved:',  JSON.stringify(metricas))
+  console.log('[home] ctaFinal resolved:',  JSON.stringify(ctaFinal))
 
   const properties = rawProps.map(adaptPropiedad)
 
@@ -29,28 +56,28 @@ export default async function HomePage() {
       <Header />
       <main>
         {/* 1. Hero */}
-        <Hero />
+        <Hero cms={hero} />
 
         {/* 2. Sobre Radix */}
-        <Intro />
+        <Intro cms={sobreRadix} />
 
         {/* 3. Propiedades disponibles — datos reales */}
         <Inventory properties={properties} />
 
         {/* 4. Experiencia acumulada */}
-        <DataViz />
+        <DataViz metrics={metricas} />
 
         {/* 5. Presencia donde importa */}
-        <MapSection />
+        <MapSection cms={territorio} />
 
         {/* 6. Cada dimensión del mercado */}
-        <ExperiencePanels />
+        <ExperiencePanels cms={servicios} />
 
         {/* 7. Administración premium */}
-        <Administration />
+        <Administration cms={administracion} />
 
         {/* 8. Inversiones y oportunidades */}
-        <Investments />
+        <Investments cms={inversiones} />
 
         {/* 9. Testimonios — TODO: conectar a DB */}
         <Testimonials testimonials={TESTIMONIALS} />
@@ -61,6 +88,13 @@ export default async function HomePage() {
           phoneHref={contact.phone_href}
           email={contact.email}
           hours={contact.hours}
+          ctaLabel={ctaFinal.ctaLabel}
+          headline1={ctaFinal.headline1}
+          headline2={ctaFinal.headline2}
+          subtitle={ctaFinal.subtitle}
+          primaryCtaLabel={ctaFinal.primaryCtaLabel}
+          primaryCtaHref={ctaFinal.primaryCtaHref}
+          locationLine={ctaFinal.locationLine}
         />
       </main>
 

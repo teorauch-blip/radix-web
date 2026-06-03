@@ -5,11 +5,31 @@ import { motion, useInView } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
 import { SERVICE_PANELS } from '@/lib/content/home'
+import type { ServiciosConfig } from '@/lib/types/db'
 
-export function ExperiencePanels() {
+interface ExperiencePanelsProps {
+  cms?: ServiciosConfig
+}
+
+export function ExperiencePanels({ cms }: ExperiencePanelsProps = {}) {
   const ref = useRef<HTMLElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
   const [activePanel, setActivePanel] = useState<string | null>(null)
+
+  // Merge CMS text over SERVICE_PANELS structure (id, number, accent stay fixed)
+  const resolvedPanels = SERVICE_PANELS.map((panel, i) => ({
+    ...panel,
+    title:       cms?.panels?.[i]?.title       || panel.title,
+    description: cms?.panels?.[i]?.description || panel.description,
+    metric:      cms?.panels?.[i]?.metric      || panel.metric,
+    subMetric:   cms?.panels?.[i]?.subMetric   || panel.subMetric,
+    href:        cms?.panels?.[i]?.href        || panel.href,
+  }))
+
+  const label     = cms?.label     || 'Servicios'
+  const titleLine1 = cms?.titleLine1 || 'Cada dimensión'
+  const titleLine2 = cms?.titleLine2 || 'del mercado.'
+  const subtitle  = cms?.subtitle  || 'Operamos en todos los segmentos del mercado inmobiliario con la misma exigencia y criterio profesional.'
 
   return (
     <section ref={ref} className="section-padding bg-radix-navy">
@@ -23,7 +43,7 @@ export function ExperiencePanels() {
               animate={isInView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             >
-              Servicios
+              {label}
             </motion.div>
             <motion.h2
               className="font-serif text-display-3 text-white"
@@ -31,9 +51,9 @@ export function ExperiencePanels() {
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.9, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             >
-              Cada dimensión
+              {titleLine1}
               <br />
-              del mercado.
+              {titleLine2}
             </motion.h2>
           </div>
           <motion.p
@@ -42,13 +62,13 @@ export function ExperiencePanels() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           >
-            Operamos en todos los segmentos del mercado inmobiliario con la misma exigencia y criterio profesional.
+            {subtitle}
           </motion.p>
         </div>
 
         {/* Panel grid */}
         <div className="grid md:grid-cols-2 gap-4">
-          {SERVICE_PANELS.map((panel, i) => (
+          {resolvedPanels.map((panel, i) => (
             <motion.div
               key={panel.id}
               initial={{ opacity: 0, y: 30 }}

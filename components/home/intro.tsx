@@ -3,8 +3,17 @@
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { COMPANY_ABOUT } from '@/lib/content/company'
+import type { SobreRadixConfig } from '@/lib/types/db'
 
-export function Intro() {
+interface IntroProps {
+  cms?: SobreRadixConfig
+}
+
+export function Intro({ cms }: IntroProps = {}) {
+  const label      = cms?.label      ?? COMPANY_ABOUT.label
+  const titleLine1 = cms?.titleLine1 ?? COMPANY_ABOUT.headlineLines[0]
+  const titleLine2 = cms?.titleLine2 ?? COMPANY_ABOUT.headlineLines[1]
+  const paragraphs = cms?.paragraphs ?? [...COMPANY_ABOUT.paragraphs]
   const ref = useRef<HTMLElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
@@ -20,7 +29,7 @@ export function Intro() {
               transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
               className="label-tag mb-8"
             >
-              {COMPANY_ABOUT.label}
+              {label}
             </motion.div>
 
             <motion.h2
@@ -29,17 +38,17 @@ export function Intro() {
               transition={{ duration: 1, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
               className="font-serif text-display-3 text-[#0C1929]"
             >
-              {COMPANY_ABOUT.headlineLines[0]}
+              {titleLine1}
               <br />
               <span className="italic font-normal text-[#3A5A78]">
-                {COMPANY_ABOUT.headlineLines[1]}
+                {titleLine2}
               </span>
             </motion.h2>
           </div>
 
           {/* Right column */}
           <div className="lg:col-span-7 lg:pt-16 space-y-6">
-            {COMPANY_ABOUT.paragraphs.map((text, i) => (
+            {paragraphs.map((text, i) => (
               <motion.p
                 key={i}
                 initial={{ opacity: 0, y: 20 }}

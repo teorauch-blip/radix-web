@@ -11,13 +11,31 @@ interface CtaSectionProps {
   phoneHref?: string
   email?: string
   hours?: string
+  ctaLabel?: string
+  headline1?: string
+  headline2?: string
+  subtitle?: string
+  primaryCtaLabel?: string
+  primaryCtaHref?: string
+  locationLine?: string
 }
 
-export function CtaSection({ phone, phoneHref, email, hours }: CtaSectionProps = {}) {
+export function CtaSection({
+  phone, phoneHref, email, hours,
+  ctaLabel, headline1, headline2, subtitle,
+  primaryCtaLabel, primaryCtaHref, locationLine,
+}: CtaSectionProps = {}) {
   const displayPhone    = phone     ?? CONTACT.phone
   const displayHref     = phoneHref ?? CONTACT.phone_href
   const displayEmail    = email     ?? CONTACT.email
   const displayHours    = hours     ?? CONTACT.hours
+  const displayCtaLabel        = ctaLabel        ?? 'Contacto'
+  const displayHeadline1       = headline1       ?? 'El primer paso es'
+  const displayHeadline2       = headline2       ?? 'una conversación.'
+  const displaySubtitle        = subtitle        ?? 'Contanos qué buscás. Nuestro equipo analiza tu situación y te presenta opciones concretas, sin rodeos.'
+  const displayPrimaryCtaLabel = primaryCtaLabel ?? 'Escribir a RADIX'
+  const displayPrimaryCtaHref  = primaryCtaHref  ?? '/contacto'
+  const displayLocationLine    = locationLine    ?? 'Salta · NOA'
   const ref = useRef<HTMLElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -92,7 +110,7 @@ export function CtaSection({ phone, phoneHref, email, hours }: CtaSectionProps =
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ duration: 0.7 }}
         >
-          Contacto
+          {displayCtaLabel}
         </motion.div>
 
         <motion.h2
@@ -101,9 +119,9 @@ export function CtaSection({ phone, phoneHref, email, hours }: CtaSectionProps =
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 1, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
         >
-          El primer paso es
+          {displayHeadline1}
           <br />
-          <span className="text-gradient">una conversación.</span>
+          <span className="text-gradient">{displayHeadline2}</span>
         </motion.h2>
 
         <motion.p
@@ -112,7 +130,7 @@ export function CtaSection({ phone, phoneHref, email, hours }: CtaSectionProps =
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
         >
-          Contanos qué buscás. Nuestro equipo analiza tu situación y te presenta opciones concretas, sin rodeos.
+          {displaySubtitle}
         </motion.p>
 
         <motion.div
@@ -121,8 +139,8 @@ export function CtaSection({ phone, phoneHref, email, hours }: CtaSectionProps =
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
         >
-          <Link href="/contacto" className="btn-primary text-base px-8 py-4">
-            Escribir a RADIX
+          <Link href={displayPrimaryCtaHref} className="btn-primary text-base px-8 py-4">
+            {displayPrimaryCtaLabel}
             <ArrowUpRight className="w-4 h-4" />
           </Link>
           <a href={displayHref} className="btn-ghost-dark text-base px-8 py-4">
@@ -151,7 +169,7 @@ export function CtaSection({ phone, phoneHref, email, hours }: CtaSectionProps =
           </span>
           <div className="hidden sm:block w-px h-4 bg-[#1E3550]/20" />
           <span className="text-sm text-[#7A9AB8]">
-            Salta · NOA
+            {displayLocationLine}
           </span>
         </motion.div>
       </div>
