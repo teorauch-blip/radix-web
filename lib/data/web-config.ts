@@ -31,6 +31,12 @@ import type {
   NavbarLink,
   FooterConfig,
   FooterLinkItem,
+  WebConfigEquipoNosotros,
+  EquipoNosotrosConfig,
+  EquipoMiembro,
+  WebConfigFiltrosPropiedades,
+  FiltrosPropiedadesConfig,
+  FiltroOpcion,
 } from '@/lib/types/db'
 import { CONTACT, WHATSAPP_NUMBER } from '@/lib/content/contact'
 import { COMPANY, COMPANY_ABOUT } from '@/lib/content/company'
@@ -537,5 +543,133 @@ export async function getFooterConfig(): Promise<FooterConfig> {
     privacyHref:          db?.privacy_href          || '/privacidad',
     termsLabel:           db?.terms_label           || 'Términos',
     termsHref:            db?.terms_href            || '/terminos',
+  }
+}
+
+// ─── Equipo Nosotros ──────────────────────────────────────────
+
+export type { EquipoNosotrosConfig }
+
+const EQUIPO_FALLBACK: EquipoMiembro[] = [
+  {
+    nombre:       'Rosa Uriburu',
+    cargo:        'Socio Fundador',
+    descripcion:  'Más de 17 años de trayectoria en el mercado inmobiliario de Salta, liderando operaciones de compra, venta, inversión y desarrollo.',
+    fotoUrl:      '',
+    linkedinUrl:  '',
+    email:        '',
+  },
+  {
+    nombre:       'Teodoro Rauch',
+    cargo:        'Socio | Consultor Inmobiliario',
+    descripcion:  'Especializado en asesoramiento inmobiliario, análisis de inversiones, desarrollos y estrategia comercial.',
+    fotoUrl:      '',
+    linkedinUrl:  '',
+    email:        '',
+  },
+  {
+    nombre:       'Josefina Torino',
+    cargo:        'Coordinadora de Administración de Propiedades',
+    descripcion:  'Responsable del seguimiento operativo, administración de alquileres y coordinación con propietarios e inquilinos.',
+    fotoUrl:      '',
+    linkedinUrl:  '',
+    email:        '',
+  },
+  {
+    nombre:       'Paula Ovejero',
+    cargo:        'Asesora Comercial',
+    descripcion:  'Acompaña a clientes e inversores durante todo el proceso de búsqueda, análisis y adquisición de propiedades.',
+    fotoUrl:      '',
+    linkedinUrl:  '',
+    email:        '',
+  },
+]
+
+export async function getEquipoNosotrosConfig(): Promise<EquipoNosotrosConfig> {
+  const db = await fetchConfig<WebConfigEquipoNosotros>('equipo_nosotros')
+
+  const cmsItems = (db?.items ?? [])
+    .filter(item => item.activo !== false)
+    .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+
+  const items: EquipoMiembro[] = cmsItems.length
+    ? cmsItems.map((item, i) => ({
+        nombre:      item.nombre       || EQUIPO_FALLBACK[i]?.nombre       || '',
+        cargo:       item.cargo        || EQUIPO_FALLBACK[i]?.cargo        || '',
+        descripcion: item.descripcion  || EQUIPO_FALLBACK[i]?.descripcion  || '',
+        fotoUrl:     item.foto_url     || '',
+        linkedinUrl: item.linkedin_url || '',
+        email:       item.email        || '',
+      }))
+    : EQUIPO_FALLBACK
+
+  return {
+    sectionLabel: db?.section_label || 'Equipo',
+    titleLine1:   db?.title_line_1  || 'Las personas',
+    titleLine2:   db?.title_line_2  || 'detrás de RADIX.',
+    items,
+  }
+}
+
+// ─── Filtros Propiedades ──────────────────────────────────────
+
+export type { FiltrosPropiedadesConfig, FiltroOpcion }
+
+const FILTROS_FALLBACK: FiltrosPropiedadesConfig = {
+  operaciones: [
+    { label: 'Todas las operaciones', value: '' },
+    { label: 'Venta',                 value: 'venta' },
+    { label: 'Alquiler',              value: 'alquiler' },
+  ],
+  tipos: [
+    { label: 'Todos los tipos',  value: '' },
+    { label: 'Casa',             value: 'casa' },
+    { label: 'Departamento',     value: 'departamento' },
+    { label: 'Dúplex',           value: 'duplex' },
+    { label: 'Terreno',          value: 'terreno' },
+    { label: 'Local Comercial',  value: 'local' },
+    { label: 'Oficina',          value: 'oficina' },
+    { label: 'Galpón',           value: 'galpon' },
+    { label: 'Desarrollo',       value: 'desarrollo' },
+  ],
+  ubicaciones: [
+    { label: 'Todas las zonas',    value: '' },
+    { label: 'Salta Capital',      value: 'salta' },
+    { label: 'San Lorenzo',        value: 'san lorenzo' },
+    { label: 'San Lorenzo Chico',  value: 'san lorenzo chico' },
+    { label: 'Tres Cerritos',      value: 'tres cerritos' },
+    { label: 'Valle de Lerma',     value: 'valle de lerma' },
+    { label: 'Cafayate',           value: 'cafayate' },
+    { label: 'Otras zonas',        value: 'otros' },
+  ],
+  dormitorios: [
+    { label: 'Dormitorios', value: '' },
+    { label: '1+',          value: '1' },
+    { label: '2+',          value: '2' },
+    { label: '3+',          value: '3' },
+    { label: '4+',          value: '4' },
+  ],
+}
+
+export async function getFiltrosPropiedadesConfig(): Promise<FiltrosPropiedadesConfig> {
+  const db = await fetchConfig<WebConfigFiltrosPropiedades>('filtros_propiedades')
+
+  function parseGrupo(
+    raw: WebConfigFiltrosPropiedades[keyof WebConfigFiltrosPropiedades],
+    fallback: FiltroOpcion[],
+  ): FiltroOpcion[] {
+    if (!raw?.length) return fallback
+    const activas = (raw as NonNullable<typeof raw>)
+      .filter(o => o.active !== false)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      .map(o => ({ label: o.label ?? '', value: o.value ?? '' }))
+    return activas.length ? activas : fallback
+  }
+
+  return {
+    operaciones: parseGrupo(db?.operaciones, FILTROS_FALLBACK.operaciones),
+    tipos:       parseGrupo(db?.tipos,       FILTROS_FALLBACK.tipos),
+    ubicaciones: parseGrupo(db?.ubicaciones, FILTROS_FALLBACK.ubicaciones),
+    dormitorios: parseGrupo(db?.dormitorios, FILTROS_FALLBACK.dormitorios),
   }
 }

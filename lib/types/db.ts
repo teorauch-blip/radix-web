@@ -470,3 +470,61 @@ export interface FooterConfig {
   termsLabel: string
   termsHref: string
 }
+
+// ─── Equipo Nosotros ──────────────────────────────────────────
+
+export interface WebConfigEquipoNosotros {
+  section_label?: string
+  title_line_1?: string
+  title_line_2?: string
+  items?: Array<{
+    nombre?: string
+    cargo?: string
+    descripcion?: string
+    foto_url?: string
+    orden?: number
+    activo?: boolean
+    linkedin_url?: string
+    email?: string
+  }>
+}
+
+export interface EquipoMiembro {
+  nombre: string
+  cargo: string
+  descripcion: string
+  fotoUrl: string
+  linkedinUrl: string
+  email: string
+}
+
+export interface EquipoNosotrosConfig {
+  sectionLabel: string
+  titleLine1: string
+  titleLine2: string
+  items: EquipoMiembro[]
+}
+
+// ─── Filtros Propiedades ──────────────────────────────────────
+
+/** Forma raw que guarda el CMS en web_config */
+export interface WebConfigFiltrosPropiedades {
+  operaciones?: Array<{ label?: string; value?: string; active?: boolean; order?: number }>
+  tipos?:       Array<{ label?: string; value?: string; active?: boolean; order?: number }>
+  ubicaciones?: Array<{ label?: string; value?: string; active?: boolean; order?: number }>
+  dormitorios?: Array<{ label?: string; value?: string; active?: boolean; order?: number }>
+}
+
+/** Opción individual ya procesada (solo activas, ordenadas, lista para usar) */
+export interface FiltroOpcion {
+  label: string
+  value: string
+}
+
+/** Config completa de filtros, lista para pasarla al componente */
+export interface FiltrosPropiedadesConfig {
+  operaciones: FiltroOpcion[]
+  tipos:       FiltroOpcion[]
+  ubicaciones: FiltroOpcion[]
+  dormitorios: FiltroOpcion[]
+}
