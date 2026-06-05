@@ -129,7 +129,7 @@ export const SERVICE_PANELS = [
     title: 'Residencial',
     description:
       'Casas, departamentos y desarrollos en las mejores ubicaciones de Salta. Selección rigurosa y atención personalizada en cada operación.',
-    href: '/propiedades?categoria=residencial',
+    href: '/propiedades?tipo=casa',
     metric: 'Compra · Venta · Alquiler',
     subMetric: 'propiedades residenciales',
     accent: '#0172C6',
@@ -141,7 +141,7 @@ export const SERVICE_PANELS = [
     title: 'Comercial',
     description:
       'Locales, oficinas y plantas industriales. Análisis de rentabilidad, due diligence jurídico y gestión integral del activo.',
-    href: '/propiedades?categoria=comercial',
+    href: '/propiedades?tipo=local',
     metric: 'Compra · Alquiler',
     subMetric: 'activos comerciales',
     accent: '#0E1B8C',
@@ -153,7 +153,7 @@ export const SERVICE_PANELS = [
     title: 'Desarrollo',
     description:
       'Lotes estratégicos y proyectos en pozo. Identificamos el activo, estructuramos la operación, acompañamos el proceso.',
-    href: '/inversiones',
+    href: '/propiedades?tipo=desarrollo',
     metric: 'Tierra · Pozo',
     subMetric: 'oportunidades de desarrollo',
     accent: '#0172C6',

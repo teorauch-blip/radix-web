@@ -46,12 +46,6 @@ export default async function HomePage() {
     getInventarioHomeConfig(),
   ])
 
-  // LOG TEMPORAL — ver en terminal del servidor
-  console.log('[home] hero resolved:',      JSON.stringify(hero))
-  console.log('[home] sobreRadix resolved:', JSON.stringify(sobreRadix))
-  console.log('[home] metricas resolved:',  JSON.stringify(metricas))
-  console.log('[home] ctaFinal resolved:',  JSON.stringify(ctaFinal))
-
   const properties = rawProps.map(adaptPropiedad)
 
   return (
@@ -64,14 +58,14 @@ export default async function HomePage() {
         {/* 2. Sobre Radix */}
         <Intro cms={sobreRadix} />
 
-        {/* 3. Propiedades disponibles — datos reales */}
-        <Inventory properties={properties} cms={inventario} />
-
-        {/* 4. Experiencia acumulada */}
+        {/* 3. Experiencia acumulada */}
         <DataViz metrics={metricas} />
 
-        {/* 5. Presencia donde importa */}
+        {/* 4. Presencia donde importa */}
         <MapSection cms={territorio} />
+
+        {/* 5. Propiedades disponibles — datos reales */}
+        <Inventory properties={properties} cms={inventario} />
 
         {/* 6. Cada dimensión del mercado */}
         <ExperiencePanels cms={servicios} />

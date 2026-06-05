@@ -509,7 +509,7 @@ function parseCmsFooterLinks(
 
 const DEFAULT_FOOTER_SERVICIOS: FooterLinkItem[] = [
   { label: 'Compra y venta',   href: '/propiedades' },
-  { label: 'Alquileres',       href: '/propiedades?tipo=alquiler' },
+  { label: 'Alquileres',       href: '/propiedades?operacion=alquiler' },
   { label: 'Inversiones',      href: '/inversiones' },
   { label: 'Administración',   href: '/administracion' },
   { label: 'Desarrollos',      href: '/propiedades?tipo=desarrollo' },
