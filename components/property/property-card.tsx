@@ -30,10 +30,18 @@ export function PropertyCard({ property, index = 0, variant = 'default' }: Prope
       viewport={{ once: true, margin: '-50px' }}
       transition={{ duration: 0.7, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
       className={`group relative overflow-hidden rounded-2xl bg-radix-surface border border-radix-border
-                  transition-all duration-500 ease-radix
+                  transition-all duration-500 ease-radix cursor-pointer
                   hover:border-radix-border-2 hover:shadow-[0_0_50px_rgba(1,114,198,0.08)]
                   ${isFeatured ? 'flex flex-col' : ''}`}
     >
+      {/* Stretched link — toda la card es clickeable (imagen, título y contenido)
+          sin anidar <a> inválidos: un único link cubre la card vía overlay. */}
+      <Link
+        href={`/propiedades/${property.slug}`}
+        aria-label={`Ver detalle de ${property.title}`}
+        className="absolute inset-0 z-20 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-radix-blue"
+      />
+
       {/* Image */}
       <div className={`relative overflow-hidden ${isFeatured ? 'aspect-[4/3]' : 'aspect-[16/10]'}`}>
         <Image
@@ -120,14 +128,15 @@ export function PropertyCard({ property, index = 0, variant = 'default' }: Prope
             </div>
           </div>
 
-          <Link
-            href={`/propiedades/${property.slug}`}
+          {/* Visual únicamente — la navegación la maneja el stretched link de arriba.
+              No es un <a> para evitar links anidados inválidos. */}
+          <span
             className="flex items-center gap-1.5 text-xs text-radix-text-3
-                       hover:text-radix-blue transition-colors duration-200 group/link"
+                       transition-colors duration-200 group-hover:text-radix-blue"
           >
             Ver detalle
-            <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
-          </Link>
+            <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </span>
         </div>
       </div>
     </motion.article>

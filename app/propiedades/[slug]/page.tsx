@@ -1,13 +1,15 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { ArrowLeft, MapPin, ArrowUpRight } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { getPropiedadesPublicas, getPropiedadPublica, getPropiedadImagenes } from '@/lib/data/propiedades'
-import type { PropiedadPublica, ImagenPublica } from '@/lib/types/db'
+import type { PropiedadPublica } from '@/lib/types/db'
 import { getContactConfig } from '@/lib/data/web-config'
+import { formatPrice as formatCurrency } from '@/lib/utils'
+import { PropertyGallery, type GalleryImage } from '@/components/property/property-gallery'
+import { LeadModalButton } from '@/components/property/lead-modal-button'
 
 export const revalidate = 300
 
@@ -23,13 +25,14 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }): Promise<Metadata> {
-  const property = await getPropiedadPublica(params.slug)
+  const { slug } = await params
+  const property = await getPropiedadPublica(slug)
   if (!property) return {}
 
   return {
-    title:       property.seo_title ?? property.titulo_web ?? params.slug,
+    title:       property.seo_title ?? property.titulo_web ?? slug,
     description: property.seo_description ?? property.descripcion_web ?? undefined,
     openGraph: property.imagen_portada_url
       ? { images: [{ url: property.imagen_portada_url }] }
@@ -59,34 +62,14 @@ const OPERACION_LABEL = (p: PropiedadPublica): string => {
 
 function formatPrice(amount: number | null, currency: string | null): string {
   if (!amount) return 'Consultar'
-  const fmt = new Intl.NumberFormat('es-AR', {
-    style:                 'currency',
-    currency:              currency ?? 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  })
-  return fmt.format(amount)
-}
-
-// Imagen con fallback elegante
-function PropertyImage({ src, alt, className }: { src: string | null; alt: string; className?: string }) {
-  const PLACEHOLDER = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80'
-  return (
-    <Image
-      src={src ?? PLACEHOLDER}
-      alt={alt}
-      fill
-      className={className ?? 'object-cover'}
-      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-      priority
-    />
-  )
+  return formatCurrency(amount, currency)
 }
 
 // ─── Página ───────────────────────────────────────────────────
 
-export default async function PropiedadPage({ params }: { params: { slug: string } }) {
-  const property = await getPropiedadPublica(params.slug)
+export default async function PropiedadPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const property = await getPropiedadPublica(slug)
   if (!property) notFound()
 
   const [imagenes, contact] = await Promise.all([
@@ -104,10 +87,20 @@ export default async function PropiedadPage({ params }: { params: { slug: string
 
   // Imagen de portada: la marcada como es_portada, o la primera, o imagen_portada_url
   const portada = imagenes.find(i => i.es_portada) ?? imagenes[0] ?? null
-  const coverSrc = portada?.url ?? property.imagen_portada_url
+  const altBase = property.titulo_web ?? property.codigo
 
-  // Galería de miniaturas (excluye la portada)
-  const galeria = imagenes.filter(i => i.url !== coverSrc).slice(0, 8)
+  // Lista unificada para la galería: portada primero, resto después.
+  // Fallback a imagen_portada_url si no hay imágenes en la tabla.
+  const galleryImages: GalleryImage[] =
+    imagenes.length > 0
+      ? (portada ? [portada, ...imagenes.filter(i => i.id !== portada.id)] : imagenes).map(i => ({
+          id:  i.id,
+          url: i.url,
+          alt: i.alt_text ?? altBase,
+        }))
+      : property.imagen_portada_url
+        ? [{ id: 'cover', url: property.imagen_portada_url, alt: altBase }]
+        : []
 
   // Características booleanas como amenities
   const amenities: string[] = []
@@ -140,33 +133,8 @@ export default async function PropiedadPage({ params }: { params: { slug: string
             Propiedades
           </Link>
 
-          {/* Cover image */}
-          <div className="rounded-2xl overflow-hidden mb-4 aspect-[16/7] bg-radix-surface relative">
-            <PropertyImage
-              src={coverSrc}
-              alt={property.titulo_web ?? property.codigo}
-            />
-          </div>
-
-          {/* Galería de miniaturas */}
-          {galeria.length > 0 && (
-            <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2 mb-10">
-              {galeria.map((img) => (
-                <div
-                  key={img.id}
-                  className="aspect-square rounded-lg overflow-hidden relative bg-radix-surface"
-                >
-                  <Image
-                    src={img.url}
-                    alt={img.alt_text ?? property.titulo_web ?? property.codigo}
-                    fill
-                    className="object-cover hover:scale-105 transition-transform duration-500"
-                    sizes="120px"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Galería: mosaico + lightbox + miniaturas */}
+          <PropertyGallery images={galleryImages} title={altBase} />
 
           <div className="grid lg:grid-cols-3 gap-12">
             {/* Left: details */}
@@ -289,6 +257,14 @@ export default async function PropiedadPage({ params }: { params: { slug: string
                   Consultar por WhatsApp
                   <ArrowUpRight className="w-4 h-4" />
                 </a>
+
+                <LeadModalButton
+                  propiedad={{
+                    id:     property.id,
+                    codigo: property.codigo,
+                    titulo: property.titulo_web ?? property.codigo,
+                  }}
+                />
 
                 <Link href="/propiedades" className="btn-ghost w-full justify-center text-sm">
                   Ver más propiedades

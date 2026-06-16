@@ -4,6 +4,7 @@ import { Footer } from '@/components/layout/footer'
 import { Phone, Mail, MapPin, Clock, ArrowUpRight } from 'lucide-react'
 import { whatsappUrl, WHATSAPP_DEFAULT_MSG } from '@/lib/content/contact'
 import { getContactConfig } from '@/lib/data/web-config'
+import { LeadForm } from '@/components/property/lead-form'
 
 export const revalidate = 3600
 
@@ -74,6 +75,16 @@ export default async function ContactoPage() {
               </div>
               <ArrowUpRight className="w-5 h-5 text-radix-text-4 mt-6 transition-all duration-200 group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </a>
+          </div>
+
+          {/* Lead form */}
+          <div className="max-w-2xl mb-16">
+            <div className="text-xs text-radix-text-4 uppercase tracking-[0.15em] mb-4">
+              O dejanos tu consulta
+            </div>
+            <div className="bg-radix-surface/40 border border-radix-border rounded-2xl p-7 lg:p-8">
+              <LeadForm />
+            </div>
           </div>
 
           {/* Info strip */}
