@@ -1,7 +1,13 @@
 import { Metadata } from 'next'
+import Image from 'next/image'
+import { Linkedin, Mail } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { COMPANY, COMPANY_ABOUT } from '@/lib/content/company'
+import { getEquipoNosotrosConfig } from '@/lib/data/web-config'
+import type { EquipoMiembro } from '@/lib/types/db'
+
+export const revalidate = 300
 
 export const metadata: Metadata = {
   title: 'Nosotros · RADIX',
@@ -9,7 +15,87 @@ export const metadata: Metadata = {
     'Empresa familiar con más de 17 años en el mercado inmobiliario de Salta. Conocé nuestra historia y equipo.',
 }
 
-export default function NosotrosPage() {
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(w => w[0]?.toUpperCase() ?? '')
+    .join('')
+}
+
+function MemberCard({ member }: { member: EquipoMiembro }) {
+  const hasLinks = member.linkedinUrl || member.email
+  return (
+    <div className="bg-radix-surface border border-radix-border rounded-2xl p-8 flex flex-col gap-5 hover:border-radix-border-2 transition-colors duration-300">
+      {/* Avatar + Identidad */}
+      <div className="flex items-start gap-5">
+        <div className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0">
+          {member.fotoUrl ? (
+            <Image
+              src={member.fotoUrl}
+              alt={member.nombre}
+              fill
+              className="object-cover"
+              sizes="56px"
+            />
+          ) : (
+            <div className="w-full h-full bg-radix-gradient flex items-center justify-center">
+              <span className="text-white font-semibold text-sm tracking-wide">
+                {getInitials(member.nombre)}
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0 pt-1">
+          <div className="text-white text-base font-light leading-snug">
+            {member.nombre}
+          </div>
+          <div className="text-radix-text-4 text-[0.65rem] mt-1 uppercase tracking-[0.1em]">
+            {member.cargo}
+          </div>
+        </div>
+      </div>
+
+      {/* Descripción */}
+      {member.descripcion && (
+        <p className="text-radix-text-3 text-sm leading-relaxed flex-1">
+          {member.descripcion}
+        </p>
+      )}
+
+      {/* Links */}
+      {hasLinks && (
+        <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-radix-border">
+          {member.linkedinUrl && (
+            <a
+              href={member.linkedinUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs text-radix-text-4 hover:text-radix-text-2 transition-colors duration-200"
+            >
+              <Linkedin className="w-3.5 h-3.5" />
+              LinkedIn
+            </a>
+          )}
+          {member.email && (
+            <a
+              href={`mailto:${member.email}`}
+              className="flex items-center gap-1.5 text-xs text-radix-text-4 hover:text-radix-text-2 transition-colors duration-200"
+            >
+              <Mail className="w-3.5 h-3.5" />
+              {member.email}
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default async function NosotrosPage() {
+  const equipo = await getEquipoNosotrosConfig()
+
   return (
     <>
       <Header />
@@ -62,21 +148,22 @@ export default function NosotrosPage() {
             </div>
           </div>
 
-          {/* Team stub */}
+          {/* Equipo */}
           <div id="equipo" className="pt-16 border-t border-white/[0.07]">
-            <div className="label-tag mb-8">Equipo</div>
+            <div className="label-tag mb-6">{equipo.sectionLabel}</div>
+            <h2 className="font-serif text-display-3 text-white mb-12">
+              {equipo.titleLine1}
+              <br />
+              <span className="italic font-normal text-radix-text-2">{equipo.titleLine2}</span>
+            </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="bg-radix-surface border border-radix-border rounded-2xl p-8">
-                <div className="w-14 h-14 rounded-full bg-radix-surface-2 mb-5" />
-                <div className="text-white text-base font-light">{COMPANY.founder}</div>
-                <div className="text-radix-text-4 text-xs mt-1 uppercase tracking-wider">
-                  Fundadora · Directora
-                </div>
-              </div>
+              {equipo.items.map((member) => (
+                <MemberCard key={member.nombre} member={member} />
+              ))}
             </div>
           </div>
 
-          {/* History stub */}
+          {/* Historia */}
           <div id="historia" className="pt-20 border-t border-white/[0.07] mt-20">
             <div className="label-tag mb-8">Trayectoria</div>
             <p className="text-radix-text-3 text-lg max-w-xl leading-relaxed">

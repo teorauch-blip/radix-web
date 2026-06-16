@@ -245,7 +245,9 @@ export default async function PropiedadPage({ params }: { params: Promise<{ slug
                   {formatPrice(precio, moneda)}
                 </div>
                 <div className="text-radix-text-4 text-sm mb-8">
-                  {property.barrio ?? property.ciudad} · {property.ciudad}
+                  {property.barrio && property.barrio !== property.ciudad
+                    ? `${property.barrio} · ${property.ciudad}`
+                    : property.ciudad}
                 </div>
 
                 <a

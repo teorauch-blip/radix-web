@@ -5,6 +5,7 @@ import { motion, useInView } from 'framer-motion'
 import { TrendingUp, MapPin, Building2, ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
 import { INVESTMENT_AREAS } from '@/lib/content/home'
+import type { InversionesHomeConfig } from '@/lib/types/db'
 
 const ICON_MAP = {
   MapPin,
@@ -12,9 +13,33 @@ const ICON_MAP = {
   TrendingUp,
 }
 
-export function Investments() {
+type IconName = keyof typeof ICON_MAP
+
+interface InvestmentsProps {
+  cms?: InversionesHomeConfig
+}
+
+export function Investments({ cms }: InvestmentsProps = {}) {
   const ref = useRef<HTMLElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
+
+  // Merge CMS text over INVESTMENT_AREAS structure (iconName stays fixed by index)
+  const resolvedAreas = (cms?.areas?.length ? cms.areas : INVESTMENT_AREAS).map((area, i) => ({
+    iconName:    (INVESTMENT_AREAS[i % INVESTMENT_AREAS.length]?.iconName ?? 'MapPin') as IconName,
+    title:       area.title       || INVESTMENT_AREAS[i]?.title       || '',
+    description: area.description || INVESTMENT_AREAS[i]?.description || '',
+    badge:       area.badge       || INVESTMENT_AREAS[i]?.badge       || '',
+    type:        area.type        || INVESTMENT_AREAS[i]?.type        || '',
+  }))
+
+  const label          = cms?.label          || 'Inversiones'
+  const titleLine1     = cms?.titleLine1     || 'Salta como'
+  const titleLine2     = cms?.titleLine2     || 'activo estratégico.'
+  const paragraph      = cms?.paragraph      || 'El NOA tiene un mercado en crecimiento sostenido. RADIX acompaña operaciones de inversión con criterio profesional y conocimiento local del mercado salteño.'
+  const bannerQuestion = cms?.bannerQuestion || '¿Buscás una oportunidad de inversión?'
+  const bannerSub      = cms?.bannerSub      || 'Nuestro equipo analiza tu perfil y te presenta activos que se ajustan a tus objetivos.'
+  const bannerCtaLabel = cms?.bannerCtaLabel || 'Ver oportunidades'
+  const bannerCtaHref  = cms?.bannerCtaHref  || '/inversiones'
 
   return (
     <section ref={ref} className="section-padding relative overflow-hidden bg-radix-abyss">
@@ -35,7 +60,7 @@ export function Investments() {
               animate={isInView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             >
-              Inversiones
+              {label}
             </motion.div>
 
             <motion.h2
@@ -44,9 +69,9 @@ export function Investments() {
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.9, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             >
-              Salta como
+              {titleLine1}
               <br />
-              activo estratégico.
+              {titleLine2}
             </motion.h2>
           </div>
           <div className="lg:col-span-6 lg:flex lg:items-end">
@@ -56,14 +81,14 @@ export function Investments() {
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             >
-              El NOA tiene un mercado en crecimiento sostenido. RADIX acompaña operaciones de inversión con criterio profesional y conocimiento local del mercado salteño.
+              {paragraph}
             </motion.p>
           </div>
         </div>
 
         {/* Investment cards */}
         <div className="grid md:grid-cols-3 gap-5 mb-14">
-          {INVESTMENT_AREAS.map((area, i) => {
+          {resolvedAreas.map((area, i) => {
             const Icon = ICON_MAP[area.iconName]
             return (
               <motion.div
@@ -109,11 +134,11 @@ export function Investments() {
           transition={{ duration: 0.8, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
         >
           <div>
-            <div className="text-white font-medium mb-1">¿Buscás una oportunidad de inversión?</div>
-            <div className="text-radix-text-3 text-sm">Nuestro equipo analiza tu perfil y te presenta activos que se ajustan a tus objetivos.</div>
+            <div className="text-white font-medium mb-1">{bannerQuestion}</div>
+            <div className="text-radix-text-3 text-sm">{bannerSub}</div>
           </div>
-          <Link href="/inversiones" className="btn-primary whitespace-nowrap">
-            Ver oportunidades
+          <Link href={bannerCtaHref} className="btn-primary whitespace-nowrap">
+            {bannerCtaLabel}
             <ArrowUpRight className="w-4 h-4" />
           </Link>
         </motion.div>

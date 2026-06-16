@@ -2,30 +2,17 @@ import Link from 'next/link'
 import { MapPin, Phone, Mail } from 'lucide-react'
 import { NewsletterForm } from './newsletter-form'
 import { RadixLogo } from '@/components/ui/radix-logo'
-import { CONTACT } from '@/lib/content/contact'
-import { getContactConfig, getEmpresaConfig } from '@/lib/data/web-config'
-
-const FOOTER_LINKS = {
-  servicios: [
-    { label: 'Compra y venta', href: '/propiedades' },
-    { label: 'Alquileres', href: '/propiedades?tipo=alquiler' },
-    { label: 'Inversiones', href: '/inversiones' },
-    { label: 'Administración', href: '/administracion' },
-    { label: 'Desarrollos', href: '/propiedades?tipo=desarrollo' },
-  ],
-  empresa: [
-    { label: 'Nosotros', href: '/nosotros' },
-    { label: 'Equipo', href: '/nosotros#equipo' },
-    { label: 'Trayectoria', href: '/nosotros#historia' },
-    { label: 'Contacto', href: '/contacto' },
-  ],
-}
+import { getContactConfig, getEmpresaConfig, getFooterConfig } from '@/lib/data/web-config'
 
 export async function Footer() {
-  const [contact, empresa] = await Promise.all([
+  const [contact, empresa, footer] = await Promise.all([
     getContactConfig(),
     getEmpresaConfig(),
+    getFooterConfig(),
   ])
+
+  // Footer tagline overrides empresa tagline if set
+  const tagline = footer.tagline || empresa.tagline
 
   return (
     <footer className="relative bg-radix-black border-t border-white/[0.05] overflow-hidden">
@@ -48,7 +35,7 @@ export async function Footer() {
               <RadixLogo size="sm" />
             </div>
             <p className="text-radix-text-4 text-sm leading-relaxed max-w-xs font-light">
-              {empresa.tagline}
+              {tagline}
             </p>
 
             <div className="mt-7 space-y-3.5">
@@ -78,10 +65,10 @@ export async function Footer() {
           {/* Servicios */}
           <div>
             <h4 className="text-[0.6rem] text-radix-text-4 uppercase tracking-[0.2em] mb-6">
-              Servicios
+              {footer.serviciosTitle}
             </h4>
             <ul className="space-y-3">
-              {FOOTER_LINKS.servicios.map((link) => (
+              {footer.serviciosLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -97,10 +84,10 @@ export async function Footer() {
           {/* Empresa */}
           <div>
             <h4 className="text-[0.6rem] text-radix-text-4 uppercase tracking-[0.2em] mb-6">
-              Empresa
+              {footer.empresaTitle}
             </h4>
             <ul className="space-y-3">
-              {FOOTER_LINKS.empresa.map((link) => (
+              {footer.empresaLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -116,32 +103,35 @@ export async function Footer() {
           {/* Newsletter */}
           <div>
             <h4 className="text-[0.6rem] text-radix-text-4 uppercase tracking-[0.2em] mb-6">
-              Oportunidades
+              {footer.newsletterTitle}
             </h4>
             <p className="text-sm text-radix-text-4 mb-5 leading-relaxed font-light">
-              Recibí alertas de propiedades exclusivas antes de su publicación general.
+              {footer.newsletterDescription}
             </p>
-            <NewsletterForm />
+            <NewsletterForm
+              placeholder={footer.newsletterPlaceholder}
+              buttonLabel={footer.newsletterButtonLabel}
+            />
           </div>
         </div>
 
         {/* Bottom row */}
         <div className="flex flex-col sm:flex-row items-center justify-between py-6 gap-4">
           <p className="text-[0.6rem] text-radix-text-4 tracking-wide">
-            © {new Date().getFullYear()} RADIX Consultores Inmobiliarios. Todos los derechos reservados.
+            © {new Date().getFullYear()} {footer.copyrightEntity}. Todos los derechos reservados.
           </p>
           <div className="flex items-center gap-6">
             <Link
-              href="/privacidad"
+              href={footer.privacyHref}
               className="text-[0.6rem] text-radix-text-4 hover:text-radix-text-3 transition-colors tracking-wide"
             >
-              Privacidad
+              {footer.privacyLabel}
             </Link>
             <Link
-              href="/terminos"
+              href={footer.termsHref}
               className="text-[0.6rem] text-radix-text-4 hover:text-radix-text-3 transition-colors tracking-wide"
             >
-              Términos
+              {footer.termsLabel}
             </Link>
             <span className="text-[0.6rem] text-radix-text-4 tracking-wide">
               {empresa.matriculas}

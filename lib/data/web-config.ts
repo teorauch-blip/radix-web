@@ -4,11 +4,54 @@ import type {
   WebConfigRedes,
   WebConfigEmpresa,
   WebConfigSeo,
+  WebConfigHero,
+  WebConfigSobreRadix,
+  WebConfigMetricas,
+  WebConfigCtaFinal,
+  WebConfigTerritorio,
+  WebConfigServicios,
+  WebConfigAdministracionHome,
+  WebConfigInversionesHome,
+  WebConfigTestimonios,
+  WebConfigInventarioHome,
+  WebConfigNavbar,
+  WebConfigFooter,
+  HeroConfig,
+  SobreRadixConfig,
+  SobreRadixDetail,
+  MetricaItem,
+  CtaFinalConfig,
+  TeritorioConfig,
+  ServiciosConfig,
+  AdministracionHomeConfig,
+  InversionesHomeConfig,
+  TestimoniosConfig,
+  InventarioHomeConfig,
+  NavbarConfig,
+  NavbarLink,
+  FooterConfig,
+  FooterLinkItem,
+  WebConfigEquipoNosotros,
+  EquipoNosotrosConfig,
+  EquipoMiembro,
+  WebConfigFiltrosPropiedades,
+  FiltrosPropiedadesConfig,
+  FiltroOpcion,
 } from '@/lib/types/db'
 import { CONTACT, WHATSAPP_NUMBER } from '@/lib/content/contact'
-import { COMPANY } from '@/lib/content/company'
+import { COMPANY, COMPANY_ABOUT } from '@/lib/content/company'
+import {
+  HERO_LABEL,
+  HOME_METRICS,
+  TERRITORY_SUB,
+  MAP_LOCATIONS,
+  SERVICE_PANELS,
+  INVESTMENT_AREAS,
+} from '@/lib/content/home'
+import { TESTIMONIALS } from '@/lib/mock-data'
 
-// Cliente para config — revalidación larga (cambia poco)
+// Cliente para config.
+// Cache alineado con el ISR de la página (revalidate = 300 en page.tsx).
 function makeConfigClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,12 +60,14 @@ function makeConfigClient() {
       auth: { persistSession: false },
       global: {
         fetch: (input, init) =>
-          fetch(input, { ...init, next: { revalidate: 3600 } } as RequestInit),
+          fetch(input, { ...init, next: { revalidate: 300 } } as RequestInit),
       },
     }
   )
 }
 
+// Lee una clave de web_config directamente desde la tabla.
+// Usa .limit(1) en lugar de .single() para no fallar si la fila no existe.
 async function fetchConfig<T>(clave: string): Promise<T | null> {
   try {
     const supabase = makeConfigClient()
@@ -30,11 +75,18 @@ async function fetchConfig<T>(clave: string): Promise<T | null> {
       .from('web_config')
       .select('valor')
       .eq('clave', clave)
-      .single()
+      .limit(1)
 
-    if (error) return null
-    return (data?.valor as T) ?? null
-  } catch {
+    if (error) {
+      console.error(`[web-config] '${clave}' error ${error.code}: ${error.message}`)
+      return null
+    }
+
+    const valor = (data?.[0]?.valor ?? null) as T | null
+    if (!valor) console.warn(`[web-config] '${clave}' sin datos → fallback activo`)
+    return valor
+  } catch (err) {
+    console.error(`[web-config] '${clave}' exception:`, err)
     return null
   }
 }
@@ -120,5 +172,504 @@ export async function getSeoConfig(): Promise<SeoConfig> {
     ogTitle:            db?.seo_og_title            ?? 'RADIX Consultores Inmobiliarios',
     ogDescription:      db?.seo_og_description      ?? 'Firma premium de real estate. Salta · NOA · Argentina.',
     ogImage:            db?.seo_og_image            ?? null,
+  }
+}
+
+// ─── Hero ─────────────────────────────────────────────────────
+
+export type { HeroConfig }
+
+export async function getHeroConfig(): Promise<HeroConfig> {
+  const db = await fetchConfig<WebConfigHero>('hero')
+  return {
+    label:             db?.hero_label               ?? HERO_LABEL,
+    titleLine1:        db?.hero_title_line_1        ?? 'Inmuebles que',
+    titleLine2:        db?.hero_title_line_2        ?? 'definen el estándar.',
+    subtitle:          db?.hero_subtitle            ?? 'RADIX opera donde la estrategia y el diseño convergen. Capital inmobiliario inteligente en el NOA.',
+    primaryCtaLabel:   db?.hero_primary_cta_label   ?? 'Ver portafolio',
+    primaryCtaHref:    db?.hero_primary_cta_href    ?? '/propiedades',
+    secondaryCtaLabel: db?.hero_secondary_cta_label ?? 'Hablar con un asesor',
+    secondaryCtaHref:  db?.hero_secondary_cta_href  ?? '/contacto',
+  }
+}
+
+// ─── Sobre RADIX ──────────────────────────────────────────────
+
+export type { SobreRadixConfig }
+
+export async function getSobreRadixConfig(): Promise<SobreRadixConfig> {
+  const db = await fetchConfig<WebConfigSobreRadix>('sobre_radix')
+
+  const details: SobreRadixDetail[] = [
+    {
+      label: db?.detail_1_label    || COMPANY_ABOUT.details[0].label,
+      sub:   db?.detail_1_sublabel || COMPANY_ABOUT.details[0].sub,
+    },
+    {
+      label: db?.detail_2_label    || COMPANY_ABOUT.details[1].label,
+      sub:   db?.detail_2_sublabel || COMPANY_ABOUT.details[1].sub,
+    },
+    {
+      label: db?.detail_3_label    || COMPANY_ABOUT.details[2].label,
+      sub:   db?.detail_3_sublabel || COMPANY_ABOUT.details[2].sub,
+    },
+  ]
+
+  return {
+    label:      db?.intro_label        ?? COMPANY_ABOUT.label,
+    titleLine1: db?.intro_title_line_1 ?? COMPANY_ABOUT.headlineLines[0],
+    titleLine2: db?.intro_title_line_2 ?? COMPANY_ABOUT.headlineLines[1],
+    paragraphs: db
+      ? [db.intro_paragraph_1, db.intro_paragraph_2, db.intro_paragraph_3].filter(Boolean) as string[]
+      : [...COMPANY_ABOUT.paragraphs],
+    details,
+  }
+}
+
+// ─── Métricas ─────────────────────────────────────────────────
+
+export type { MetricaItem }
+
+export async function getMetricasConfig(): Promise<MetricaItem[]> {
+  const db = await fetchConfig<WebConfigMetricas>('metricas')
+  if (db?.items?.length) {
+    return db.items.map((item, i) => ({
+      value:  (parseInt(item.value  ?? '', 10) || 0) || (HOME_METRICS[i]?.value ?? 0),
+      prefix: item.prefix   ?? HOME_METRICS[i]?.prefix ?? '',
+      suffix: item.suffix   ?? HOME_METRICS[i]?.suffix ?? '',
+      label:  item.label    ?? HOME_METRICS[i]?.label  ?? '',
+      sub:    item.sublabel ?? HOME_METRICS[i]?.sub    ?? '',
+    }))
+  }
+  return HOME_METRICS.map((m) => ({
+    value:  m.value,
+    prefix: m.prefix,
+    suffix: m.suffix,
+    label:  m.label,
+    sub:    m.sub,
+  }))
+}
+
+// ─── CTA Final ────────────────────────────────────────────────
+
+export type { CtaFinalConfig }
+
+export async function getCtaFinalConfig(): Promise<CtaFinalConfig> {
+  const db = await fetchConfig<WebConfigCtaFinal>('cta_final')
+  return {
+    ctaLabel:        db?.cta_label         ?? 'Contacto',
+    headline1:       db?.cta_headline_1    ?? 'El primer paso es',
+    headline2:       db?.cta_headline_2    ?? 'una conversación.',
+    subtitle:        db?.cta_subtitle      ?? 'Contanos qué buscás. Nuestro equipo analiza tu situación y te presenta opciones concretas, sin rodeos.',
+    primaryCtaLabel: db?.cta_primary_label ?? 'Escribir a RADIX',
+    primaryCtaHref:  db?.cta_primary_href  ?? '/contacto',
+    locationLine:    db?.cta_location_line ?? 'Salta · NOA',
+  }
+}
+
+// ─── Territorio ───────────────────────────────────────────────
+
+export type { TeritorioConfig }
+
+export async function getTeritorioConfig(): Promise<TeritorioConfig> {
+  const db = await fetchConfig<WebConfigTerritorio>('territorio')
+
+  const cmsLocations = db?.locations?.filter(l => l.active !== false) ?? []
+  const locations = cmsLocations.length
+    ? cmsLocations.map((l, i) => ({
+        name:        l.name        || MAP_LOCATIONS[i]?.name        || '',
+        badge:       l.badge       || MAP_LOCATIONS[i]?.badge       || '',
+        address:     l.address     || MAP_LOCATIONS[i]?.address     || '',
+        description: l.description || MAP_LOCATIONS[i]?.description || '',
+      }))
+    : MAP_LOCATIONS.map(l => ({
+        name:        l.name,
+        badge:       l.badge,
+        address:     l.address,
+        description: l.description,
+      }))
+
+  return {
+    label:            db?.territory_label    || 'Territorio',
+    titleLine1:       db?.territory_title_1  || 'Presencia donde',
+    titleLine2:       db?.territory_title_2  || 'importa.',
+    subtitle:         db?.territory_subtitle || TERRITORY_SUB,
+    comingSoonText:   db?.coming_soon_text   || 'Próximamente ampliando cobertura a',
+    comingSoonCities: db?.coming_soon_cities?.filter(Boolean) ?? ['San Agustín', 'Cerrillos', 'Chicoana'],
+    locations,
+  }
+}
+
+// ─── Servicios ────────────────────────────────────────────────
+
+export type { ServiciosConfig }
+
+export async function getServiciosConfig(): Promise<ServiciosConfig> {
+  const db = await fetchConfig<WebConfigServicios>('servicios')
+
+  const cmsPanels = db?.panels?.filter(p => p.active !== false) ?? []
+  const panels = cmsPanels.length
+    ? cmsPanels.map((p, i) => ({
+        title:       p.title       || SERVICE_PANELS[i]?.title       || '',
+        description: p.description || SERVICE_PANELS[i]?.description || '',
+        metric:      p.metric      || SERVICE_PANELS[i]?.metric      || '',
+        subMetric:   p.subMetric   || SERVICE_PANELS[i]?.subMetric   || '',
+        href:        p.href        || SERVICE_PANELS[i]?.href        || '',
+      }))
+    : SERVICE_PANELS.map(p => ({
+        title:       p.title,
+        description: p.description,
+        metric:      p.metric,
+        subMetric:   p.subMetric,
+        href:        p.href,
+      }))
+
+  return {
+    label:     db?.section_label    || 'Servicios',
+    titleLine1: db?.section_title_1 || 'Cada dimensión',
+    titleLine2: db?.section_title_2 || 'del mercado.',
+    subtitle:  db?.section_subtitle || 'Operamos en todos los segmentos del mercado inmobiliario con la misma exigencia y criterio profesional.',
+    panels,
+  }
+}
+
+// ─── Administración Home ──────────────────────────────────────
+
+export type { AdministracionHomeConfig }
+
+const ADMIN_FEATURES_FALLBACK: Array<{ title: string; description: string }> = [
+  { title: 'Gestión de cobros y pagos',   description: 'Control de alquileres, expensas y gastos operativos con reportes mensuales detallados.' },
+  { title: 'Mantenimiento preventivo',    description: 'Red de proveedores verificados. Intervenciones planificadas y respuesta en 24 horas.' },
+  { title: 'Informes de rendimiento',     description: 'Dashboard de situación patrimonial, ocupación y rentabilidad histórica.' },
+  { title: 'Gestión de contratos',        description: 'Redacción, renovación, indexación y rescisión conforme a la normativa vigente.' },
+  { title: 'Optimización de cartera',     description: 'Análisis periódico de mercado con recomendaciones para maximizar el retorno.' },
+  { title: 'Atención a inquilinos',       description: 'Canal dedicado de comunicación. Resolución de conflictos y seguimiento.' },
+]
+
+export async function getAdministracionHomeConfig(): Promise<AdministracionHomeConfig> {
+  const db = await fetchConfig<WebConfigAdministracionHome>('administracion_home')
+
+  const cmsFeatures = db?.features?.filter(f => f.active !== false) ?? []
+  const features = cmsFeatures.length
+    ? cmsFeatures.map((f, i) => ({
+        title:       f.title       || ADMIN_FEATURES_FALLBACK[i]?.title       || '',
+        description: f.description || ADMIN_FEATURES_FALLBACK[i]?.description || '',
+      }))
+    : ADMIN_FEATURES_FALLBACK
+
+  return {
+    label:             db?.label               || 'Administración',
+    titleLine1:        db?.title_1             || 'Tu patrimonio,',
+    titleLine2:        db?.title_2             || 'en orden.',
+    paragraph:         db?.paragraph           || 'Gestionamos carteras inmobiliarias de propietarios que exigen orden, transparencia y retornos optimizados. Sin excusas, sin improvisación.',
+    ctaPrimaryLabel:   db?.cta_primary_label   || 'Más sobre administración',
+    ctaPrimaryHref:    db?.cta_primary_href    || '/administracion',
+    ctaSecondaryLabel: db?.cta_secondary_label || 'Consultar',
+    ctaSecondaryHref:  db?.cta_secondary_href  || '/contacto',
+    metric1Value:      db?.metric_1_value      || '96%',
+    metric1Label:      db?.metric_1_label      || 'clientes que renuevan',
+    metric2Value:      db?.metric_2_value      || '48h',
+    metric2Label:      db?.metric_2_label      || 'tiempo máximo de respuesta',
+    features,
+  }
+}
+
+// ─── Inversiones Home ─────────────────────────────────────────
+
+export type { InversionesHomeConfig }
+
+export async function getInversionesHomeConfig(): Promise<InversionesHomeConfig> {
+  const db = await fetchConfig<WebConfigInversionesHome>('inversiones_home')
+
+  const cmsAreas = db?.areas?.filter(a => a.active !== false) ?? []
+  const areas = cmsAreas.length
+    ? cmsAreas.map((a, i) => ({
+        title:       a.title       || INVESTMENT_AREAS[i]?.title       || '',
+        description: a.description || INVESTMENT_AREAS[i]?.description || '',
+        badge:       a.badge       || INVESTMENT_AREAS[i]?.badge       || '',
+        type:        a.type        || INVESTMENT_AREAS[i]?.type        || '',
+      }))
+    : INVESTMENT_AREAS.map(a => ({
+        title:       a.title,
+        description: a.description,
+        badge:       a.badge,
+        type:        a.type,
+      }))
+
+  return {
+    label:          db?.label            || 'Inversiones',
+    titleLine1:     db?.title_1          || 'Salta como',
+    titleLine2:     db?.title_2          || 'activo estratégico.',
+    paragraph:      db?.paragraph        || 'El NOA tiene un mercado en crecimiento sostenido. RADIX acompaña operaciones de inversión con criterio profesional y conocimiento local del mercado salteño.',
+    bannerQuestion: db?.banner_question  || '¿Buscás una oportunidad de inversión?',
+    bannerSub:      db?.banner_sub       || 'Nuestro equipo analiza tu perfil y te presenta activos que se ajustan a tus objetivos.',
+    bannerCtaLabel: db?.banner_cta_label || 'Ver oportunidades',
+    bannerCtaHref:  db?.banner_cta_href  || '/inversiones',
+    areas,
+  }
+}
+
+// ─── Testimonios ──────────────────────────────────────────────
+
+export type { TestimoniosConfig }
+
+export async function getTestimoniosConfig(): Promise<TestimoniosConfig> {
+  const db = await fetchConfig<WebConfigTestimonios>('testimonios')
+
+  // Filtra inactivos, ordena por order
+  const cmsItems = (db?.items ?? [])
+    .filter(item => item.active !== false)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+
+  const items = cmsItems.length
+    ? cmsItems.map((item, i) => ({
+        id:      String(i + 1),
+        name:    item.name    || '',
+        role:    item.role    || '',
+        company: item.company || '',
+        content: item.content || '',
+        rating:  typeof item.rating === 'number' ? item.rating : 5,
+      }))
+    : TESTIMONIALS.map(t => ({
+        id:      t.id,
+        name:    t.name,
+        role:    t.role    ?? '',
+        company: t.company ?? '',
+        content: t.content,
+        rating:  t.rating,
+      }))
+
+  return {
+    label:     db?.section_label || 'Testimonios',
+    titleLine1: db?.title_line_1 || 'Lo que dice',
+    titleLine2: db?.title_line_2 || 'quien confía en RADIX.',
+    items,
+  }
+}
+
+// ─── Inventario Home ──────────────────────────────────────────
+
+export type { InventarioHomeConfig }
+
+export async function getInventarioHomeConfig(): Promise<InventarioHomeConfig> {
+  const db = await fetchConfig<WebConfigInventarioHome>('inventario_home')
+  return {
+    label:              db?.label                || 'Inventario',
+    titleLine1:         db?.title_1              || 'Propiedades',
+    titleLine2:         db?.title_2              || 'disponibles.',
+    emptyMessage:       db?.empty_message        || 'No hay propiedades en esta categoría por el momento.',
+    filtersButtonLabel: db?.filters_button_label || 'Buscar con filtros',
+    filtersButtonHref:  db?.filters_button_href  || '/propiedades',
+    viewAllLabel:       db?.view_all_label       || 'Ver todas',
+    viewAllHref:        db?.view_all_href        || '/propiedades',
+    maxDisplay:         typeof db?.max_display === 'number' ? db.max_display : 6,
+  }
+}
+
+// ─── Navbar ───────────────────────────────────────────────────
+
+export type { NavbarConfig, NavbarLink }
+
+const DEFAULT_NAV_LINKS: NavbarLink[] = [
+  { label: 'Propiedades',    href: '/propiedades' },
+  { label: 'Inversiones',    href: '/inversiones' },
+  { label: 'Administración', href: '/administracion' },
+  { label: 'Nosotros',       href: '/nosotros' },
+]
+
+export async function getNavbarConfig(): Promise<NavbarConfig> {
+  const db = await fetchConfig<WebConfigNavbar>('navbar')
+
+  const cmsLinks = (db?.nav_links ?? []).filter(l => l.active !== false)
+  const navLinks: NavbarLink[] = cmsLinks.length
+    ? cmsLinks
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .map(l => ({ label: l.label || '', href: l.href || '/' }))
+    : DEFAULT_NAV_LINKS
+
+  return {
+    ctaLabel: db?.nav_cta_label || 'Hablar con un asesor',
+    ctaHref:  db?.nav_cta_href  || '/contacto',
+    navLinks,
+  }
+}
+
+// ─── Footer ───────────────────────────────────────────────────
+
+export type { FooterConfig, FooterLinkItem }
+
+function parseCmsFooterLinks(
+  raw: Array<{ label?: string; href?: string; active?: boolean; order?: number }> | undefined,
+): FooterLinkItem[] {
+  return (raw ?? [])
+    .filter(l => l.active !== false)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .map(l => ({ label: l.label || '', href: l.href || '/' }))
+}
+
+const DEFAULT_FOOTER_SERVICIOS: FooterLinkItem[] = [
+  { label: 'Compra y venta',   href: '/propiedades' },
+  { label: 'Alquileres',       href: '/propiedades?operacion=alquiler' },
+  { label: 'Inversiones',      href: '/inversiones' },
+  { label: 'Administración',   href: '/administracion' },
+  { label: 'Desarrollos',      href: '/propiedades?tipo=desarrollo' },
+]
+
+const DEFAULT_FOOTER_EMPRESA: FooterLinkItem[] = [
+  { label: 'Nosotros',    href: '/nosotros' },
+  { label: 'Equipo',      href: '/nosotros#equipo' },
+  { label: 'Trayectoria', href: '/nosotros#historia' },
+  { label: 'Contacto',    href: '/contacto' },
+]
+
+export async function getFooterConfig(): Promise<FooterConfig> {
+  const db = await fetchConfig<WebConfigFooter>('footer')
+
+  const serviciosLinks = parseCmsFooterLinks(db?.servicios_links)
+  const empresaLinks   = parseCmsFooterLinks(db?.empresa_links)
+
+  return {
+    tagline:              db?.tagline               || '',
+    serviciosTitle:       db?.servicios_title       || 'Servicios',
+    serviciosLinks:       serviciosLinks.length     ? serviciosLinks : DEFAULT_FOOTER_SERVICIOS,
+    empresaTitle:         db?.empresa_title         || 'Empresa',
+    empresaLinks:         empresaLinks.length       ? empresaLinks   : DEFAULT_FOOTER_EMPRESA,
+    newsletterTitle:      db?.newsletter_title      || 'Oportunidades',
+    newsletterDescription: db?.newsletter_description || 'Recibí alertas de propiedades exclusivas antes de su publicación general.',
+    newsletterPlaceholder: db?.newsletter_placeholder || 'tu@email.com',
+    newsletterButtonLabel: db?.newsletter_button_label || 'Suscribirme',
+    copyrightEntity:      db?.copyright_entity      || 'RADIX Consultores Inmobiliarios',
+    privacyLabel:         db?.privacy_label         || 'Privacidad',
+    privacyHref:          db?.privacy_href          || '/privacidad',
+    termsLabel:           db?.terms_label           || 'Términos',
+    termsHref:            db?.terms_href            || '/terminos',
+  }
+}
+
+// ─── Equipo Nosotros ──────────────────────────────────────────
+
+export type { EquipoNosotrosConfig }
+
+const EQUIPO_FALLBACK: EquipoMiembro[] = [
+  {
+    nombre:       'Rosa Uriburu',
+    cargo:        'Socio Fundador',
+    descripcion:  'Más de 17 años de trayectoria en el mercado inmobiliario de Salta, liderando operaciones de compra, venta, inversión y desarrollo.',
+    fotoUrl:      '',
+    linkedinUrl:  '',
+    email:        '',
+  },
+  {
+    nombre:       'Teodoro Rauch',
+    cargo:        'Socio | Consultor Inmobiliario',
+    descripcion:  'Especializado en asesoramiento inmobiliario, análisis de inversiones, desarrollos y estrategia comercial.',
+    fotoUrl:      '',
+    linkedinUrl:  '',
+    email:        '',
+  },
+  {
+    nombre:       'Josefina Torino',
+    cargo:        'Coordinadora de Administración de Propiedades',
+    descripcion:  'Responsable del seguimiento operativo, administración de alquileres y coordinación con propietarios e inquilinos.',
+    fotoUrl:      '',
+    linkedinUrl:  '',
+    email:        '',
+  },
+  {
+    nombre:       'Paula Ovejero',
+    cargo:        'Asesora Comercial',
+    descripcion:  'Acompaña a clientes e inversores durante todo el proceso de búsqueda, análisis y adquisición de propiedades.',
+    fotoUrl:      '',
+    linkedinUrl:  '',
+    email:        '',
+  },
+]
+
+export async function getEquipoNosotrosConfig(): Promise<EquipoNosotrosConfig> {
+  const db = await fetchConfig<WebConfigEquipoNosotros>('equipo_nosotros')
+
+  const cmsItems = (db?.items ?? [])
+    .filter(item => item.activo !== false)
+    .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+
+  const items: EquipoMiembro[] = cmsItems.length
+    ? cmsItems.map((item, i) => ({
+        nombre:      item.nombre       || EQUIPO_FALLBACK[i]?.nombre       || '',
+        cargo:       item.cargo        || EQUIPO_FALLBACK[i]?.cargo        || '',
+        descripcion: item.descripcion  || EQUIPO_FALLBACK[i]?.descripcion  || '',
+        fotoUrl:     item.foto_url     || '',
+        linkedinUrl: item.linkedin_url || '',
+        email:       item.email        || '',
+      }))
+    : EQUIPO_FALLBACK
+
+  return {
+    sectionLabel: db?.section_label || 'Equipo',
+    titleLine1:   db?.title_line_1  || 'Las personas',
+    titleLine2:   db?.title_line_2  || 'detrás de RADIX.',
+    items,
+  }
+}
+
+// ─── Filtros Propiedades ──────────────────────────────────────
+
+export type { FiltrosPropiedadesConfig, FiltroOpcion }
+
+const FILTROS_FALLBACK: FiltrosPropiedadesConfig = {
+  operaciones: [
+    { label: 'Todas las operaciones', value: '' },
+    { label: 'Venta',                 value: 'venta' },
+    { label: 'Alquiler',              value: 'alquiler' },
+  ],
+  tipos: [
+    { label: 'Todos los tipos',  value: '' },
+    { label: 'Casa',             value: 'casa' },
+    { label: 'Departamento',     value: 'departamento' },
+    { label: 'Dúplex',           value: 'duplex' },
+    { label: 'Terreno',          value: 'terreno' },
+    { label: 'Local Comercial',  value: 'local' },
+    { label: 'Oficina',          value: 'oficina' },
+    { label: 'Galpón',           value: 'galpon' },
+    { label: 'Desarrollo',       value: 'desarrollo' },
+  ],
+  ubicaciones: [
+    { label: 'Todas las zonas',    value: '' },
+    { label: 'Salta Capital',      value: 'salta' },
+    { label: 'San Lorenzo',        value: 'san lorenzo' },
+    { label: 'San Lorenzo Chico',  value: 'san lorenzo chico' },
+    { label: 'Tres Cerritos',      value: 'tres cerritos' },
+    { label: 'Valle de Lerma',     value: 'valle de lerma' },
+    { label: 'Cafayate',           value: 'cafayate' },
+    { label: 'Otras zonas',        value: 'otros' },
+  ],
+  dormitorios: [
+    { label: 'Dormitorios', value: '' },
+    { label: '1+',          value: '1' },
+    { label: '2+',          value: '2' },
+    { label: '3+',          value: '3' },
+    { label: '4+',          value: '4' },
+  ],
+}
+
+export async function getFiltrosPropiedadesConfig(): Promise<FiltrosPropiedadesConfig> {
+  const db = await fetchConfig<WebConfigFiltrosPropiedades>('filtros_propiedades')
+
+  function parseGrupo(
+    raw: WebConfigFiltrosPropiedades[keyof WebConfigFiltrosPropiedades],
+    fallback: FiltroOpcion[],
+  ): FiltroOpcion[] {
+    if (!raw?.length) return fallback
+    const activas = (raw as NonNullable<typeof raw>)
+      .filter(o => o.active !== false)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      .map(o => ({ label: o.label ?? '', value: o.value ?? '' }))
+    return activas.length ? activas : fallback
+  }
+
+  return {
+    operaciones: parseGrupo(db?.operaciones, FILTROS_FALLBACK.operaciones),
+    tipos:       parseGrupo(db?.tipos,       FILTROS_FALLBACK.tipos),
+    ubicaciones: parseGrupo(db?.ubicaciones, FILTROS_FALLBACK.ubicaciones),
+    dormitorios: parseGrupo(db?.dormitorios, FILTROS_FALLBACK.dormitorios),
   }
 }

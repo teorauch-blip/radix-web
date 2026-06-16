@@ -4,6 +4,11 @@ import { useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { MapPin } from 'lucide-react'
 import { MAP_LOCATIONS, TERRITORY_SUB } from '@/lib/content/home'
+import type { TeritorioConfig } from '@/lib/types/db'
+
+interface MapSectionProps {
+  cms?: TeritorioConfig
+}
 
 // SVG viewBox: 0 0 560 480 — abstract cartographic croquis of Salta region
 // Top = North, Bottom = South. Valley runs N–S through center.
@@ -38,12 +43,28 @@ const ROAD_E  = 'M278,168 C299,163 326,158 358,153 Q392,148 422,143'
 const RIVER   = 'M255,105 C253,168 251,244 249,318 C247,394 249,462 247,480'
 
 
-export function MapSection() {
+export function MapSection({ cms }: MapSectionProps = {}) {
   const ref = useRef<HTMLElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
   const [activeLocation, setActiveLocation] = useState<string | null>('salta-capital')
 
-  const active = MAP_LOCATIONS.find((l) => l.id === activeLocation)
+  // Merge CMS text over MAP_LOCATIONS geometry (sx, sy, id stay fixed)
+  const resolvedLocations = MAP_LOCATIONS.map((loc, i) => ({
+    ...loc,
+    name:        cms?.locations?.[i]?.name        || loc.name,
+    badge:       cms?.locations?.[i]?.badge        || loc.badge,
+    address:     cms?.locations?.[i]?.address      || loc.address,
+    description: cms?.locations?.[i]?.description  || loc.description,
+  }))
+
+  const label           = cms?.label           || 'Territorio'
+  const titleLine1      = cms?.titleLine1      || 'Presencia donde'
+  const titleLine2      = cms?.titleLine2      || 'importa.'
+  const subtitle        = cms?.subtitle        || TERRITORY_SUB
+  const comingSoonText  = cms?.comingSoonText  || 'Próximamente ampliando cobertura a'
+  const comingSoonCities = cms?.comingSoonCities ?? ['San Agustín', 'Cerrillos', 'Chicoana']
+
+  const active = resolvedLocations.find((l) => l.id === activeLocation)
 
   return (
     <section ref={ref} className="section-padding bg-radix-navy overflow-hidden">
@@ -58,7 +79,7 @@ export function MapSection() {
               animate={isInView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
             >
-              Territorio
+              {label}
             </motion.div>
             <motion.h2
               className="font-serif text-display-3 text-white"
@@ -66,9 +87,9 @@ export function MapSection() {
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 1, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             >
-              Presencia donde
+              {titleLine1}
               <br />
-              importa.
+              {titleLine2}
             </motion.h2>
           </div>
           <motion.p
@@ -77,7 +98,7 @@ export function MapSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           >
-            {TERRITORY_SUB}
+            {subtitle}
           </motion.p>
         </div>
 
@@ -240,7 +261,7 @@ export function MapSection() {
               </g>
 
               {/* Location markers */}
-              {MAP_LOCATIONS.map((loc) => {
+              {resolvedLocations.map((loc) => {
                 const isActive = activeLocation === loc.id
                 return (
                   <g
@@ -310,7 +331,7 @@ export function MapSection() {
             transition={{ duration: 1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col gap-3"
           >
-            {MAP_LOCATIONS.map((location) => (
+            {resolvedLocations.map((location) => (
               <button
                 key={location.id}
                 onClick={() => setActiveLocation(location.id)}
@@ -352,10 +373,10 @@ export function MapSection() {
 
             <div className="mt-2 p-5 rounded-xl bg-radix-surface border border-radix-border">
               <div className="text-xs text-radix-text-4 mb-3 tracking-wide">
-                Próximamente ampliando cobertura a
+                {comingSoonText}
               </div>
               <div className="flex flex-wrap gap-2">
-                {['San Agustín', 'Cerrillos', 'Chicoana'].map((city) => (
+                {comingSoonCities.map((city) => (
                   <span
                     key={city}
                     className="px-3 py-1 text-xs text-radix-text-4 bg-radix-dark rounded-full border border-radix-border"

@@ -6,9 +6,11 @@ import { ArrowUpRight, SlidersHorizontal } from 'lucide-react'
 import Link from 'next/link'
 import { PropertyCard } from '@/components/property/property-card'
 import { Property, PropertyType } from '@/types'
+import type { InventarioHomeConfig } from '@/lib/types/db'
 
 interface InventoryProps {
   properties: Property[]
+  cms?: InventarioHomeConfig
 }
 
 const FILTERS: { label: string; value: PropertyType | 'all' }[] = [
@@ -19,10 +21,19 @@ const FILTERS: { label: string; value: PropertyType | 'all' }[] = [
   { label: 'Desarrollos', value: 'desarrollo' },
 ]
 
-export function Inventory({ properties }: InventoryProps) {
+export function Inventory({ properties, cms }: InventoryProps) {
   const ref = useRef<HTMLElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-60px' })
   const [activeFilter, setActiveFilter] = useState<PropertyType | 'all'>('all')
+
+  const label              = cms?.label              || 'Inventario'
+  const titleLine1         = cms?.titleLine1         || 'Propiedades'
+  const titleLine2         = cms?.titleLine2         || 'disponibles.'
+  const emptyMessage       = cms?.emptyMessage       || 'No hay propiedades en esta categoría por el momento.'
+  const filtersButtonLabel = cms?.filtersButtonLabel || 'Buscar con filtros'
+  const filtersButtonHref  = cms?.filtersButtonHref  || '/propiedades'
+  const viewAllHref        = cms?.viewAllHref        || '/propiedades'
+  const maxDisplay         = cms?.maxDisplay         ?? 6
 
   const filtered =
     activeFilter === 'all'
@@ -100,7 +111,7 @@ export function Inventory({ properties }: InventoryProps) {
               animate={isInView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             >
-              Inventario
+              {label}
             </motion.div>
             <motion.h2
               className="font-serif text-display-3 text-white"
@@ -108,9 +119,9 @@ export function Inventory({ properties }: InventoryProps) {
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.9, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             >
-              Propiedades
+              {titleLine1}
               <br />
-              disponibles.
+              {titleLine2}
             </motion.h2>
           </div>
 
@@ -119,9 +130,9 @@ export function Inventory({ properties }: InventoryProps) {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           >
-            <Link href="/propiedades" className="btn-ghost text-sm group">
+            <Link href={filtersButtonHref} className="btn-ghost text-sm group">
               <SlidersHorizontal className="w-4 h-4" />
-              Buscar con filtros
+              {filtersButtonLabel}
               <ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
           </motion.div>
@@ -152,13 +163,13 @@ export function Inventory({ properties }: InventoryProps) {
         {/* Grid */}
         {filtered.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtered.slice(0, 6).map((property, i) => (
+            {filtered.slice(0, maxDisplay).map((property, i) => (
               <PropertyCard key={property.id} property={property} index={i} />
             ))}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="text-radix-text-4 text-sm">No hay propiedades en esta categoría por el momento.</div>
+            <div className="text-radix-text-4 text-sm">{emptyMessage}</div>
             <button
               onClick={() => setActiveFilter('all')}
               className="btn-ghost mt-4 text-sm"
@@ -168,9 +179,9 @@ export function Inventory({ properties }: InventoryProps) {
           </div>
         )}
 
-        {filtered.length > 6 && (
+        {filtered.length > maxDisplay && (
           <div className="text-center mt-10">
-            <Link href="/propiedades" className="btn-outline">
+            <Link href={viewAllHref} className="btn-outline">
               Ver las {filtered.length} propiedades
               <ArrowUpRight className="w-4 h-4" />
             </Link>

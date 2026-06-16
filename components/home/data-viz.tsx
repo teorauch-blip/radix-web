@@ -3,6 +3,11 @@
 import { useRef, useEffect } from 'react'
 import { motion, useInView, useMotionValue, animate } from 'framer-motion'
 import { HOME_METRICS } from '@/lib/content/home'
+import type { MetricaItem } from '@/lib/types/db'
+
+interface DataVizProps {
+  metrics?: MetricaItem[]
+}
 
 interface CounterProps {
   from: number
@@ -33,9 +38,16 @@ function Counter({ from, to, duration = 2.2, format }: CounterProps) {
   return <span ref={ref}>{format ? format(from) : from}</span>
 }
 
-export function DataViz() {
+export function DataViz({ metrics }: DataVizProps = {}) {
   const ref = useRef<HTMLElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
+  const resolvedMetrics: MetricaItem[] = metrics ?? HOME_METRICS.map((m) => ({
+    value:  m.value,
+    prefix: m.prefix,
+    suffix: m.suffix,
+    label:  m.label,
+    sub:    m.sub,
+  }))
 
   return (
     <section ref={ref} className="section-padding relative overflow-hidden bg-radix-navy">
@@ -70,7 +82,7 @@ export function DataViz() {
 
         {/* 4-stat grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-radix-border/40 rounded-2xl overflow-hidden">
-          {HOME_METRICS.map((m, i) => (
+          {resolvedMetrics.map((m, i) => (
             <motion.div
               key={m.label}
               initial={{ opacity: 0, y: 20 }}
