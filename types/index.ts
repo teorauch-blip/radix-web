@@ -1,4 +1,6 @@
 export type PropertyType = 'venta' | 'alquiler' | 'desarrollo' | 'inversion'
+/** Operación comercial, derivada estrictamente de los precios cargados. */
+export type PropertyOperation = 'venta' | 'alquiler' | 'venta_alquiler'
 export type PropertyCategory = 'residencial' | 'comercial' | 'oficina' | 'lote' | 'desarrollo' | 'penthouse'
 export type PropertyStatus = 'disponible' | 'reservado' | 'vendido' | 'alquilado' | 'en-construccion'
 export type Currency = 'USD' | 'ARS'
@@ -10,6 +12,10 @@ export interface Property {
   short_description: string
   description?: string
   type: PropertyType
+  /** Operación comercial real (venta / alquiler / ambas). null si no hay precio cargado. */
+  operation?: PropertyOperation | null
+  /** Tipo físico de la propiedad (casa, departamento, terreno, …), tal cual la DB. */
+  kind?: string
   category: PropertyCategory
   status: PropertyStatus
   price: number

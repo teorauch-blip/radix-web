@@ -55,8 +55,11 @@ const TIPO_LABEL: Record<string, string> = {
 }
 
 const OPERACION_LABEL = (p: PropiedadPublica): string => {
-  if (p.precio_venta && p.precio_venta > 0)     return 'Venta'
-  if (p.precio_alquiler && p.precio_alquiler > 0) return 'Alquiler'
+  const venta    = !!(p.precio_venta    && p.precio_venta    > 0)
+  const alquiler = !!(p.precio_alquiler && p.precio_alquiler > 0)
+  if (venta && alquiler) return 'Venta / Alquiler'
+  if (venta)             return 'Venta'
+  if (alquiler)          return 'Alquiler'
   return 'Consultar'
 }
 

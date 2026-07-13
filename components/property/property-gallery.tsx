@@ -1,8 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import Image from 'next/image'
 import { X, ChevronLeft, ChevronRight, Expand } from 'lucide-react'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 
 export interface GalleryImage {
   id: string
@@ -70,7 +70,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
             hasSide ? 'lg:col-span-2' : 'lg:col-span-3'
           }`}
         >
-          <Image
+          <ImageWithFallback
             src={main.url}
             alt={main.alt}
             fill
@@ -98,7 +98,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
                 aria-label={`Ampliar imagen ${i + 2}`}
                 className="group relative flex-1 overflow-hidden rounded-2xl bg-radix-surface"
               >
-                <Image
+                <ImageWithFallback
                   src={img.url}
                   alt={img.alt}
                   fill
@@ -127,7 +127,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
                   : 'opacity-60 hover:opacity-100'
               }`}
             >
-              <Image src={img.url} alt={img.alt} fill sizes="120px" className="object-cover" />
+              <ImageWithFallback src={img.url} alt={img.alt} fill sizes="120px" className="object-cover" />
             </button>
           ))}
         </div>
@@ -179,7 +179,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
           )}
 
           <div onClick={(e) => e.stopPropagation()} className="relative h-full w-full max-w-5xl">
-            <Image
+            <ImageWithFallback
               src={imgs[lightbox].url}
               alt={imgs[lightbox].alt}
               fill

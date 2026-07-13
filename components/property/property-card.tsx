@@ -1,7 +1,7 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 import { motion } from 'framer-motion'
 import { Bed, Bath, Square, ArrowUpRight, MapPin } from 'lucide-react'
 import { Property } from '@/types'
@@ -13,12 +13,30 @@ interface PropertyCardProps {
   variant?: 'default' | 'featured'
 }
 
-const TYPE_LABEL: Record<string, string> = {
-  venta: 'Venta',
-  alquiler: 'Alquiler',
-  desarrollo: 'Desarrollo',
-  inversion: 'Inversión',
+// Badge de operación — derivado de los precios (ver adaptPropiedad).
+const OPERATION_LABEL: Record<string, string> = {
+  venta:          'Venta',
+  alquiler:       'Alquiler',
+  venta_alquiler: 'Venta / Alquiler',
 }
+
+// Badge de tipo físico — un terreno es "Terreno", nunca "Desarrollo".
+const KIND_LABEL: Record<string, string> = {
+  casa:         'Casa',
+  departamento: 'Departamento',
+  duplex:       'Dúplex',
+  local:        'Local',
+  oficina:      'Oficina',
+  galpon:       'Galpón',
+  terreno:      'Terreno',
+  cochera:      'Cochera',
+  desarrollo:   'Desarrollo',
+  otro:         'Propiedad',
+}
+
+const badgeClass =
+  'inline-flex items-center px-2.5 py-1 text-[0.65rem] font-medium tracking-wide ' +
+  'uppercase rounded-full bg-black/40 backdrop-blur-sm text-white/80 border border-white/10'
 
 export function PropertyCard({ property, index = 0, variant = 'default' }: PropertyCardProps) {
   const isFeatured = variant === 'featured'
@@ -44,7 +62,7 @@ export function PropertyCard({ property, index = 0, variant = 'default' }: Prope
 
       {/* Image */}
       <div className={`relative overflow-hidden ${isFeatured ? 'aspect-[4/3]' : 'aspect-[16/10]'}`}>
-        <Image
+        <ImageWithFallback
           src={property.cover_image}
           alt={property.title}
           fill
@@ -55,17 +73,23 @@ export function PropertyCard({ property, index = 0, variant = 'default' }: Prope
         {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-radix-black/60 via-transparent to-transparent" />
 
-        {/* Badges */}
+        {/* Badges: destacado (independiente) · operación · tipo */}
         <div className="absolute top-4 left-4 flex flex-wrap gap-2">
           {property.highlight_label && (
             <span className="highlight-badge">
               {property.highlight_label}
             </span>
           )}
-          <span className="inline-flex items-center px-2.5 py-1 text-[0.65rem] font-medium tracking-wide
-                           uppercase rounded-full bg-black/40 backdrop-blur-sm text-white/80 border border-white/10">
-            {TYPE_LABEL[property.type] || property.type}
-          </span>
+          {property.operation && (
+            <span className={badgeClass}>
+              {OPERATION_LABEL[property.operation]}
+            </span>
+          )}
+          {property.kind && (
+            <span className={badgeClass}>
+              {KIND_LABEL[property.kind] || property.kind}
+            </span>
+          )}
         </div>
 
         {/* Status badge */}
@@ -121,7 +145,7 @@ export function PropertyCard({ property, index = 0, variant = 'default' }: Prope
         <div className="flex items-center justify-between">
           <div>
             <div className="text-xs text-radix-text-4 mb-0.5">
-              {property.type === 'alquiler' ? `Por ${property.price_period || 'mes'}` : 'Precio'}
+              {property.operation === 'alquiler' ? `Por ${property.price_period || 'mes'}` : 'Precio'}
             </div>
             <div className="text-lg font-light text-white tracking-tight">
               {formatPrice(property.price, property.currency)}

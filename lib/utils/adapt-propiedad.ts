@@ -31,17 +31,24 @@ function capitalize(s: string) {
 }
 
 export function adaptPropiedad(p: PropiedadPublica): Property {
-  let type: Property['type'] = 'venta'
-  if (p.precio_alquiler && p.precio_alquiler > 0 && !p.precio_venta) {
-    type = 'alquiler'
-  } else if (p.tipo === 'terreno') {
-    type = 'desarrollo'
-  }
+  // Operación: derivada SOLO de los precios cargados, nunca del tipo físico.
+  const hasVenta    = !!(p.precio_venta    && p.precio_venta    > 0)
+  const hasAlquiler = !!(p.precio_alquiler && p.precio_alquiler > 0)
 
-  const price    = type === 'alquiler' ? (p.precio_alquiler ?? 0) : (p.precio_venta ?? 0)
-  const currency = (type === 'alquiler'
-    ? (p.moneda_alquiler ?? 'ARS')
-    : (p.moneda_venta    ?? 'USD')) as Property['currency']
+  let operation: Property['operation'] = null
+  if (hasVenta && hasAlquiler)      operation = 'venta_alquiler'
+  else if (hasVenta)                operation = 'venta'
+  else if (hasAlquiler)             operation = 'alquiler'
+
+  // `type` se conserva solo para los pills de filtro del inventario del home.
+  // Refleja la operación (venta/alquiler), jamás el tipo físico (un terreno NO es desarrollo).
+  const type: Property['type'] = operation === 'alquiler' ? 'alquiler' : 'venta'
+
+  // Precio/moneda: prioriza venta; si solo hay alquiler, usa alquiler.
+  const price    = hasVenta ? (p.precio_venta ?? 0) : (p.precio_alquiler ?? 0)
+  const currency = (hasVenta
+    ? (p.moneda_venta    ?? 'USD')
+    : (p.moneda_alquiler ?? 'ARS')) as Property['currency']
 
   const amenities: string[] = []
   if (p.tiene_ascensor)   amenities.push('Ascensor')
@@ -56,6 +63,8 @@ export function adaptPropiedad(p: PropiedadPublica): Property {
     title:             p.titulo_web ?? `${capitalize(p.tipo)} en ${p.barrio ?? p.ciudad}`,
     short_description: p.descripcion_web ?? p.direccion,
     type,
+    operation,
+    kind:              p.tipo,
     category:          CATEGORY_MAP[p.tipo] ?? 'residencial',
     status:            STATUS_MAP[p.estado]  ?? 'disponible',
     price,
