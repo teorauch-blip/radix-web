@@ -1,76 +1,84 @@
 'use client'
 
-import Image, { type ImageProps } from 'next/image'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties, type ImgHTMLAttributes } from 'react'
 
 // Placeholder compartido con el resto del sitio (adapt-propiedad / property-gallery).
 const DEFAULT_FALLBACK =
   'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80'
 
-type Props = ImageProps & { fallbackSrc?: string }
-
-/**
- * Detecta si el src apunta al Storage público de Supabase.
- *
- * Estas imágenes se suben YA optimizadas como WebP desde la app de gestión,
- * por lo que el optimizador de Next/Vercel (`/_next/image`) no aporta beneficio
- * real y, en producción, es un punto de fallo: cuando la Lambda del optimizador
- * recibe un timeout/throttle transitorio de Supabase bajo concurrencia (Home y
- * /propiedades cargan decenas de imágenes a la vez), devuelve un error y Vercel
- * CACHEA esa respuesta fallida por su TTL. Resultado: la imagen queda "rota"
- * aunque la URL pública directa responda 200 perfectamente ("algunas cargan y
- * otras no"). Servirlas sin optimizar las trae directo del CDN de Supabase,
- * que es 100% confiable, eliminando por completo ese caché roto.
- */
-function isSupabaseStorage(src: ImageProps['src']): boolean {
-  return typeof src === 'string' && src.includes('.supabase.co/storage/')
+type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'alt' | 'loading'> & {
+  src: string
+  alt: string
+  fallbackSrc?: string
+  /** Replica el layout `fill` de next/image: la imagen cubre el contenedor posicionado. */
+  fill?: boolean
+  /** Carga temprana (sin lazy) para la imagen principal above-the-fold. */
+  priority?: boolean
 }
 
 /**
- * next/image con degradación elegante y resiliente para imágenes remotas.
+ * Imagen resiliente para el Storage público de Supabase, servida con `<img>` nativo.
  *
- * - Para URLs de Supabase Storage usa `unoptimized`: se sirven directo desde el
- *   CDN de Supabase (sin pasar por `/_next/image`), evitando el caché de errores
- *   del optimizador de Vercel. Se conservan lazy loading, `sizes`, `fill`, `alt`,
- *   object-cover, bordes redondeados y responsive: `unoptimized` solo cambia de
- *   dónde sale el archivo, no cómo se renderiza.
- * - Si aun así el archivo real falla en runtime (p. ej. un objeto reemplazado que
- *   dejó una página cacheada apuntando a un archivo inexistente → 404), reemplaza
- *   el src por un placeholder elegante en lugar de mostrar el ícono de imagen rota.
+ * Por qué `<img>` nativo y no `next/image`:
+ *  - Las imágenes se suben YA optimizadas como WebP desde la app de gestión, así que
+ *    el optimizador de Next/Vercel (`/_next/image`) no aporta beneficio real y, en
+ *    producción, es un punto de fallo: cuando su Lambda recibe un timeout/throttle
+ *    transitorio de Supabase bajo concurrencia (Home y /propiedades cargan decenas de
+ *    imágenes a la vez), devuelve un error y Vercel CACHEA esa respuesta fallida.
+ *    Resultado: la imagen queda "rota" aunque la URL pública responda 200 ("algunas
+ *    cargan y otras no").
+ *  - Un `<img>` nativo trae el archivo directo del CDN de Supabase (Cloudflare), que
+ *    responde `Content-Type: image/webp` + `Access-Control-Allow-Origin: *` y es 100%
+ *    confiable. Sin optimizador, sin `srcset` defectuoso, sin caché de errores.
  *
- * No cambia el diseño: usa el mismo placeholder que ya se muestra cuando una
- * propiedad no tiene imágenes.
+ * Se conservan todas las garantías visuales: `fill` (vía CSS), `loading="lazy"` salvo
+ * `priority`, `decoding="async"`, `alt`, object-fit y bordes redondeados (por className),
+ * responsive, y un fallback elegante SOLO ante un error real de carga.
  */
 export function ImageWithFallback({
   src,
-  fallbackSrc = DEFAULT_FALLBACK,
-  unoptimized,
   alt,
-  ...props
+  fallbackSrc = DEFAULT_FALLBACK,
+  fill = false,
+  priority = false,
+  className,
+  style,
+  sizes,
+  ...rest
 }: Props) {
   const [errored, setErrored] = useState(false)
 
-  // Reinicia el estado de error cuando cambia el src (galería: al cambiar la
-  // imagen principal o navegar el lightbox se reutiliza el mismo <Image>).
+  // Reinicia el estado de error cuando cambia el src (galería: al cambiar la imagen
+  // principal o navegar el lightbox se reutiliza el mismo <img>). Evita quedar
+  // bloqueado en el placeholder al pasar de una propiedad/miniatura a otra.
   useEffect(() => setErrored(false), [src])
 
-  // El modo se decide por el src ORIGINAL, no por el estado de error: así tanto
-  // la imagen de Supabase como su placeholder de fallback (Unsplash) se sirven
-  // sin pasar por el optimizador, sin ningún caché roto de por medio.
-  const skipOptimizer = unoptimized ?? isSupabaseStorage(src)
+  const finalSrc = errored ? fallbackSrc : src
+
+  // `fill`: posiciona la imagen para cubrir el contenedor (que ya es relative/absolute
+  // en los consumidores), replicando el comportamiento de next/image sin su maquinaria.
+  const fillStyle: CSSProperties | undefined = fill
+    ? { position: 'absolute', inset: 0, height: '100%', width: '100%', ...style }
+    : style
 
   return (
-    <Image
-      {...props}
+    // eslint-disable-next-line @next/next/no-img-element -- intencional: ver doc arriba.
+    <img
+      {...rest}
+      src={finalSrc}
       alt={alt}
-      src={errored ? fallbackSrc : src}
-      unoptimized={skipOptimizer}
+      sizes={sizes}
+      loading={priority ? 'eager' : 'lazy'}
+      decoding="async"
+      fetchPriority={priority ? 'high' : undefined}
+      className={className}
+      style={fillStyle}
       onError={() => {
-        if (process.env.NODE_ENV !== 'production') {
-          // Advertencia útil una sola vez por imagen (no en loop: al pasar al
-          // fallback el src cambia y onError no se vuelve a disparar).
+        if (!errored && process.env.NODE_ENV !== 'production') {
+          // Advertencia útil una única vez por imagen (sin loops: al pasar al fallback
+          // el src cambia y no volvemos a marcar error sobre el placeholder).
           console.warn(
-            `[ImageWithFallback] no se pudo cargar la imagen, usando placeholder:\n  src: ${String(src)}\n  alt: ${String(alt)}`,
+            `[ImageWithFallback] no se pudo cargar la imagen, usando placeholder:\n  src: ${src}\n  alt: ${alt}`,
           )
         }
         setErrored(true)
