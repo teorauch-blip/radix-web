@@ -5,20 +5,29 @@ import { Phone, Mail, MapPin, Clock, ArrowUpRight } from 'lucide-react'
 import { whatsappUrl, WHATSAPP_DEFAULT_MSG } from '@/lib/content/contact'
 import { getContactConfig } from '@/lib/data/web-config'
 import { LeadForm } from '@/components/property/lead-form'
+import { pageMetadata } from '@/lib/seo/metadata'
+import { JsonLd, breadcrumbSchema } from '@/lib/seo/json-ld'
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: 'Contacto · RADIX',
+export const metadata: Metadata = pageMetadata({
+  title: 'Contacto',
   description:
-    'Contactate con RADIX. Estamos en Salta Capital, listos para acompañarte en tu próxima operación inmobiliaria.',
-}
+    'Contactate con RADIX Consultores Inmobiliarios. Estamos en Salta Capital, listos para acompañarte en tu próxima operación inmobiliaria.',
+  path: '/contacto',
+})
 
 export default async function ContactoPage() {
   const contact = await getContactConfig()
   const wa = whatsappUrl(WHATSAPP_DEFAULT_MSG)
   return (
     <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: 'Inicio', path: '/' },
+          { name: 'Contacto', path: '/contacto' },
+        ])}
+      />
       <Header />
       <main className="min-h-screen relative overflow-hidden pt-28">
         <div className="absolute inset-0 bg-gradient-to-b from-[#1E3252] via-[#172A47] to-[#122137]" />

@@ -79,11 +79,16 @@ export interface WebConfigEmpresa {
 }
 
 export interface WebConfigSeo {
+  // Nombres que escribe el CMS (inmobiliaria-app)
+  seo_title_default?: string
+  seo_description?: string
+  // Nombres legacy — se siguen aceptando por compatibilidad
   seo_default_title?: string
   seo_default_description?: string
   seo_og_title?: string
   seo_og_description?: string
   seo_og_image?: string
+  seo_keywords?: string | string[] | null
 }
 
 // ─── Home sections ────────────────────────────────────────────

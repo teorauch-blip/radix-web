@@ -2,10 +2,14 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import { pageMetadata } from '@/lib/seo/metadata'
 
-export const metadata: Metadata = {
-  title: 'Política de Privacidad · RADIX',
-}
+export const metadata: Metadata = pageMetadata({
+  title: 'Política de Privacidad',
+  description:
+    'Cómo RADIX Consultores Inmobiliarios recopila, utiliza y protege los datos personales de los usuarios de este sitio.',
+  path: '/privacidad',
+})
 
 export default function PrivacidadPage() {
   return (

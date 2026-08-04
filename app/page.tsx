@@ -10,6 +10,7 @@ import { Administration } from '@/components/home/administration'
 import { Investments } from '@/components/home/investments'
 import { Testimonials } from '@/components/home/testimonials'
 import { CtaSection } from '@/components/home/cta-section'
+import type { Metadata } from 'next'
 import { getPropiedadesPublicas, adaptPropiedad } from '@/lib/data/propiedades'
 import {
   getContactConfig,
@@ -23,9 +24,42 @@ import {
   getInversionesHomeConfig,
   getTestimoniosConfig,
   getInventarioHomeConfig,
+  getSeoConfig,
 } from '@/lib/data/web-config'
+import { SITE_NAME, SITE_LOCALE, SITE_TITLE_DEFAULT, SITE_DESCRIPTION, absoluteUrl } from '@/lib/seo/site'
+import { DEFAULT_OG_IMAGE, toMetaDescription } from '@/lib/seo/metadata'
 
 export const revalidate = 300
+
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getSeoConfig()
+
+  return {
+    // El home usa el título por defecto (sin sufijo del template).
+    title: {
+      absolute: seo.defaultTitle || SITE_TITLE_DEFAULT,
+    },
+    description: toMetaDescription(seo.defaultDescription || SITE_DESCRIPTION),
+    alternates: {
+      canonical: absoluteUrl('/'),
+    },
+    openGraph: {
+      type: 'website',
+      locale: SITE_LOCALE,
+      url: absoluteUrl('/'),
+      siteName: SITE_NAME,
+      title: seo.ogTitle || seo.defaultTitle || SITE_TITLE_DEFAULT,
+      description: seo.ogDescription || seo.defaultDescription || SITE_DESCRIPTION,
+      images: [{ url: seo.ogImage || DEFAULT_OG_IMAGE }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: seo.ogTitle || seo.defaultTitle || SITE_TITLE_DEFAULT,
+      description: seo.ogDescription || seo.defaultDescription || SITE_DESCRIPTION,
+      images: [seo.ogImage || DEFAULT_OG_IMAGE],
+    },
+  }
+}
 
 export default async function HomePage() {
   const [

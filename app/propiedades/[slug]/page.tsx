@@ -4,8 +4,10 @@ import Link from 'next/link'
 import { ArrowLeft, MapPin, ArrowUpRight } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
-import { getPropiedadesPublicas, getPropiedadPublica, getPropiedadImagenes } from '@/lib/data/propiedades'
+import { getAllPropiedadesPublicas, getPropiedadPublica, getPropiedadImagenes } from '@/lib/data/propiedades'
 import type { PropiedadPublica } from '@/lib/types/db'
+import { pageMetadata, toMetaDescription } from '@/lib/seo/metadata'
+import { JsonLd, breadcrumbSchema, propertySchema } from '@/lib/seo/json-ld'
 import { getContactConfig } from '@/lib/data/web-config'
 import { formatPrice as formatCurrency } from '@/lib/utils'
 import { PropertyGallery, type GalleryImage } from '@/components/property/property-gallery'
@@ -13,13 +15,28 @@ import { LeadModalButton } from '@/components/property/lead-modal-button'
 
 export const revalidate = 300
 
-// Genera rutas estáticas para las propiedades publicadas en build time.
+// Genera rutas estáticas para TODAS las propiedades publicadas en build time.
 // dynamicParams = true (default) permite que slugs nuevos se generen on-demand.
 export async function generateStaticParams() {
-  const props = await getPropiedadesPublicas({ limit: 100 })
+  const props = await getAllPropiedadesPublicas()
   return props
     .filter(p => Boolean(p.slug))
     .map(p => ({ slug: p.slug! }))
+}
+
+/** Descripción de respaldo cuando el CMS no cargó seo_description ni descripción web. */
+function fallbackDescription(p: PropiedadPublica): string {
+  const partes = [
+    `${TIPO_LABEL[p.tipo] ?? 'Propiedad'} en ${OPERACION_LABEL(p).toLowerCase()}`,
+    p.barrio ? `${p.barrio}, ${p.ciudad}` : p.ciudad,
+    p.dormitorios != null ? `${p.dormitorios} dormitorios` : null,
+    p.banos != null ? `${p.banos} baños` : null,
+    (p.superficie_cubierta ?? p.superficie_total) != null
+      ? `${p.superficie_cubierta ?? p.superficie_total} m²`
+      : null,
+  ].filter(Boolean)
+
+  return `${partes.join(' · ')}. Consultá disponibilidad con RADIX Consultores Inmobiliarios.`
 }
 
 export async function generateMetadata({
@@ -29,15 +46,37 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const property = await getPropiedadPublica(slug)
-  if (!property) return {}
 
-  return {
-    title:       property.seo_title ?? property.titulo_web ?? slug,
-    description: property.seo_description ?? property.descripcion_web ?? undefined,
-    openGraph: property.imagen_portada_url
-      ? { images: [{ url: property.imagen_portada_url }] }
-      : undefined,
+  // Slug inexistente → la página devuelve 404; que no se indexe.
+  if (!property) {
+    return {
+      title: 'Propiedad no encontrada',
+      robots: { index: false, follow: false },
+    }
   }
+
+  const imagenes = await getPropiedadImagenes(property.id)
+  const portada =
+    imagenes.find(i => i.es_portada)?.url ??
+    imagenes[0]?.url ??
+    property.imagen_portada_url ??
+    null
+
+  // `??` no alcanza: el CMS puede guardar strings vacíos.
+  const title =
+    property.seo_title?.trim() || property.titulo_web?.trim() || property.codigo
+  const rawDescription =
+    property.seo_description?.trim() ||
+    property.descripcion_web?.trim() ||
+    fallbackDescription(property)
+
+  return pageMetadata({
+    title,
+    description: toMetaDescription(rawDescription),
+    path: `/propiedades/${slug}`,
+    ogTitle: `${title} — RADIX`,
+    ...(portada ? { images: [portada] } : {}),
+  })
 }
 
 // ─── Helpers de visualización ────────────────────────────────
@@ -115,6 +154,16 @@ export default async function PropiedadPage({ params }: { params: Promise<{ slug
 
   return (
     <>
+      <JsonLd
+        data={[
+          propertySchema(property, galleryImages.map(i => i.url)),
+          breadcrumbSchema([
+            { name: 'Inicio', path: '/' },
+            { name: 'Propiedades', path: '/propiedades' },
+            { name: property.titulo_web ?? property.codigo, path: `/propiedades/${slug}` },
+          ]),
+        ]}
+      />
       <Header />
       <main className="min-h-screen relative overflow-hidden pt-28">
         <div className="absolute inset-0 bg-gradient-to-b from-[#1E3252] via-[#172A47] to-[#122137]" />

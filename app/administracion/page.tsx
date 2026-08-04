@@ -4,14 +4,17 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { whatsappUrl } from '@/lib/content/contact'
 import { getContactConfig } from '@/lib/data/web-config'
+import { pageMetadata } from '@/lib/seo/metadata'
+import { JsonLd, breadcrumbSchema } from '@/lib/seo/json-ld'
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: 'Administración · RADIX',
+export const metadata: Metadata = pageMetadata({
+  title: 'Administración de propiedades en Salta',
   description:
-    'Administración profesional de propiedades en Salta. Gestión integral de carteras inmobiliarias con informes periódicos.',
-}
+    'Administración profesional de propiedades en Salta: cobros, contratos, mantenimiento e informes de rendimiento periódicos.',
+  path: '/administracion',
+})
 
 const FEATURES = [
   'Gestión de cobros y liquidaciones mensuales',
@@ -28,6 +31,12 @@ export default async function AdministracionPage() {
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: 'Inicio', path: '/' },
+          { name: 'Administración', path: '/administracion' },
+        ])}
+      />
       <Header />
       <main className="min-h-screen relative overflow-hidden pt-28">
         <div className="absolute inset-0 bg-gradient-to-b from-[#1E3252] via-[#172A47] to-[#122137]" />

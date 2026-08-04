@@ -5,13 +5,17 @@ import { Footer } from '@/components/layout/footer'
 import { getPropiedadesPublicas } from '@/lib/data/propiedades'
 import { getFiltrosPropiedadesConfig } from '@/lib/data/web-config'
 import { PropiedadesClient } from '@/components/propiedades/propiedades-client'
+import { pageMetadata } from '@/lib/seo/metadata'
+import { JsonLd, breadcrumbSchema, itemListSchema } from '@/lib/seo/json-ld'
 
 export const revalidate = 300
 
-export const metadata: Metadata = {
-  title: 'Propiedades',
-  description: 'Portafolio completo de propiedades RADIX. Venta, alquiler y desarrollos en Salta y el NOA.',
-}
+export const metadata: Metadata = pageMetadata({
+  title: 'Propiedades en venta y alquiler en Salta',
+  description:
+    'Portafolio completo de propiedades RADIX: casas, departamentos, terrenos y locales en venta y alquiler en Salta y el NOA.',
+  path: '/propiedades',
+})
 
 // Esqueleto mínimo mientras el cliente hidrata
 function FilterSkeleton() {
@@ -28,6 +32,20 @@ export default async function PropiedadesPage() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbSchema([
+            { name: 'Inicio', path: '/' },
+            { name: 'Propiedades', path: '/propiedades' },
+          ]),
+          itemListSchema(
+            rawProps.map((p) => ({
+              slug: p.slug,
+              titulo: p.titulo_web ?? p.codigo,
+            }))
+          ),
+        ]}
+      />
       <Header />
       <main className="min-h-screen relative overflow-hidden pt-28">
         {/* Background */}

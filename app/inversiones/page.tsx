@@ -6,20 +6,29 @@ import { Footer } from '@/components/layout/footer'
 import { whatsappUrl } from '@/lib/content/contact'
 import { INVESTMENT_AREAS } from '@/lib/content/home'
 import { getContactConfig } from '@/lib/data/web-config'
+import { pageMetadata } from '@/lib/seo/metadata'
+import { JsonLd, breadcrumbSchema } from '@/lib/seo/json-ld'
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: 'Inversiones · RADIX',
+export const metadata: Metadata = pageMetadata({
+  title: 'Inversiones inmobiliarias en Salta',
   description:
-    'Oportunidades de inversión inmobiliaria en Salta y el NOA. Lotes estratégicos, proyectos en pozo y activos de renta.',
-}
+    'Oportunidades de inversión inmobiliaria en Salta y el NOA. Lotes estratégicos, proyectos en pozo y activos de renta con acompañamiento profesional.',
+  path: '/inversiones',
+})
 
 export default async function InversionesPage() {
   const contact = await getContactConfig()
   const wa = whatsappUrl('Hola, estoy interesado en oportunidades de inversión inmobiliaria en Salta. ¿Podría obtener más información?')
   return (
     <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: 'Inicio', path: '/' },
+          { name: 'Inversiones', path: '/inversiones' },
+        ])}
+      />
       <Header />
       <main className="min-h-screen relative overflow-hidden pt-28">
         <div className="absolute inset-0 bg-gradient-to-b from-[#1E3252] via-[#172A47] to-[#122137]" />

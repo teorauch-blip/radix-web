@@ -2,10 +2,14 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import { pageMetadata } from '@/lib/seo/metadata'
 
-export const metadata: Metadata = {
-  title: 'Términos y Condiciones · RADIX',
-}
+export const metadata: Metadata = pageMetadata({
+  title: 'Términos y Condiciones',
+  description:
+    'Términos y condiciones de uso del sitio web de RADIX Consultores Inmobiliarios.',
+  path: '/terminos',
+})
 
 export default function TerminosPage() {
   return (

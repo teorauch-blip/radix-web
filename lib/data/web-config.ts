@@ -49,6 +49,7 @@ import {
   INVESTMENT_AREAS,
 } from '@/lib/content/home'
 import { TESTIMONIALS } from '@/lib/mock-data'
+import { SITE_TITLE_DEFAULT, SITE_DESCRIPTION, SITE_OG_DESCRIPTION } from '@/lib/seo/site'
 
 // Cliente para config.
 // Cache alineado con el ISR de la página (revalidate = 300 en page.tsx).
@@ -164,14 +165,29 @@ export interface SeoConfig {
   ogImage: string | null
 }
 
+/** Descarta strings vacíos y basura del CMS ('undefined', 'null'). */
+function cleanText(value: string | null | undefined): string | undefined {
+  const v = value?.trim()
+  if (!v || v === 'undefined' || v === 'null') return undefined
+  return v
+}
+
 export async function getSeoConfig(): Promise<SeoConfig> {
   const db = await fetchConfig<WebConfigSeo>('seo_global')
+
+  // El CMS guarda `seo_title_default` / `seo_description`; versiones previas
+  // usaban `seo_default_title` / `seo_default_description`. Se aceptan ambos.
+  const title =
+    cleanText(db?.seo_title_default) ?? cleanText(db?.seo_default_title)
+  const description =
+    cleanText(db?.seo_description) ?? cleanText(db?.seo_default_description)
+
   return {
-    defaultTitle:       db?.seo_default_title       ?? 'RADIX Consultores Inmobiliarios',
-    defaultDescription: db?.seo_default_description ?? 'Firma premium de real estate en Salta y el NOA.',
-    ogTitle:            db?.seo_og_title            ?? 'RADIX Consultores Inmobiliarios',
-    ogDescription:      db?.seo_og_description      ?? 'Firma premium de real estate. Salta · NOA · Argentina.',
-    ogImage:            db?.seo_og_image            ?? null,
+    defaultTitle:       title       ?? SITE_TITLE_DEFAULT,
+    defaultDescription: description ?? SITE_DESCRIPTION,
+    ogTitle:            cleanText(db?.seo_og_title)       ?? title ?? SITE_TITLE_DEFAULT,
+    ogDescription:      cleanText(db?.seo_og_description) ?? description ?? SITE_OG_DESCRIPTION,
+    ogImage:            cleanText(db?.seo_og_image)       ?? null,
   }
 }
 

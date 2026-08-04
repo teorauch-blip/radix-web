@@ -6,14 +6,17 @@ import { Footer } from '@/components/layout/footer'
 import { COMPANY, COMPANY_ABOUT } from '@/lib/content/company'
 import { getEquipoNosotrosConfig } from '@/lib/data/web-config'
 import type { EquipoMiembro } from '@/lib/types/db'
+import { pageMetadata } from '@/lib/seo/metadata'
+import { JsonLd, breadcrumbSchema } from '@/lib/seo/json-ld'
 
 export const revalidate = 300
 
-export const metadata: Metadata = {
-  title: 'Nosotros · RADIX',
+export const metadata: Metadata = pageMetadata({
+  title: 'Quiénes somos',
   description:
-    'Empresa familiar con más de 17 años en el mercado inmobiliario de Salta. Conocé nuestra historia y equipo.',
-}
+    'RADIX es una empresa familiar con más de 17 años en el mercado inmobiliario de Salta. Conocé nuestra historia, nuestro equipo y cómo trabajamos.',
+  path: '/nosotros',
+})
 
 function getInitials(name: string): string {
   return name
@@ -98,6 +101,12 @@ export default async function NosotrosPage() {
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: 'Inicio', path: '/' },
+          { name: 'Quiénes somos', path: '/nosotros' },
+        ])}
+      />
       <Header />
       <main className="min-h-screen relative overflow-hidden pt-28">
         <div className="absolute inset-0 bg-gradient-to-b from-[#1E3252] via-[#172A47] to-[#122137]" />

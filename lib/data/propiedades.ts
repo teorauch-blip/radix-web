@@ -45,6 +45,27 @@ export async function getPropiedadesPublicas(params?: {
   return (data ?? []) as PropiedadPublica[]
 }
 
+/**
+ * Trae TODAS las propiedades publicadas paginando la RPC.
+ * Usada por el sitemap y por generateStaticParams — donde un límite fijo
+ * dejaría propiedades fuera del índice de Google.
+ */
+export async function getAllPropiedadesPublicas(pageSize = 200): Promise<PropiedadPublica[]> {
+  const all: PropiedadPublica[] = []
+  const MAX_PAGES = 50 // techo de seguridad: 10.000 propiedades
+
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const batch = await getPropiedadesPublicas({
+      limit: pageSize,
+      offset: page * pageSize,
+    })
+    all.push(...batch)
+    if (batch.length < pageSize) break
+  }
+
+  return all
+}
+
 export async function getPropiedadPublica(slug: string): Promise<PropiedadPublica | null> {
   const supabase = makeClient(300)
 
