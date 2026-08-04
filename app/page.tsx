@@ -3,6 +3,7 @@ import { Footer } from '@/components/layout/footer'
 import { Hero } from '@/components/home/hero'
 import { Intro } from '@/components/home/intro'
 import { Inventory } from '@/components/home/inventory'
+import { Valuations } from '@/components/home/valuations'
 import { DataViz } from '@/components/home/data-viz'
 import { MapSection } from '@/components/home/map-section'
 import { ExperiencePanels } from '@/components/home/experience-panels'
@@ -24,6 +25,7 @@ import {
   getInversionesHomeConfig,
   getTestimoniosConfig,
   getInventarioHomeConfig,
+  getTasacionesHomeConfig,
   getSeoConfig,
 } from '@/lib/data/web-config'
 import { SITE_NAME, SITE_LOCALE, SITE_TITLE_DEFAULT, SITE_DESCRIPTION, absoluteUrl } from '@/lib/seo/site'
@@ -65,6 +67,7 @@ export default async function HomePage() {
   const [
     rawProps, contact, hero, sobreRadix, metricas, ctaFinal,
     territorio, servicios, administracion, inversiones, testimoniosConfig, inventario,
+    tasaciones,
   ] = await Promise.all([
     getPropiedadesPublicas({ limit: 50 }),
     getContactConfig(),
@@ -78,6 +81,7 @@ export default async function HomePage() {
     getInversionesHomeConfig(),
     getTestimoniosConfig(),
     getInventarioHomeConfig(),
+    getTasacionesHomeConfig(),
   ])
 
   const properties = rawProps.map(adaptPropiedad)
@@ -101,16 +105,19 @@ export default async function HomePage() {
         {/* 5. Propiedades disponibles — datos reales */}
         <Inventory properties={properties} cms={inventario} />
 
-        {/* 6. Cada dimensión del mercado */}
+        {/* 6. Tasaciones */}
+        <Valuations cms={tasaciones} />
+
+        {/* 7. Cada dimensión del mercado */}
         <ExperiencePanels cms={servicios} />
 
-        {/* 7. Administración premium */}
+        {/* 8. Administración premium */}
         <Administration cms={administracion} />
 
-        {/* 8. Inversiones y oportunidades */}
+        {/* 9. Inversiones y oportunidades */}
         <Investments cms={inversiones} />
 
-        {/* 9. Testimonios */}
+        {/* 10. Testimonios */}
         <Testimonials
           testimonials={testimoniosConfig.items}
           cms={{
@@ -120,7 +127,7 @@ export default async function HomePage() {
           }}
         />
 
-        {/* 10. CTA premium — datos de contacto reales */}
+        {/* 11. CTA premium — datos de contacto reales */}
         <CtaSection
           phone={contact.phone}
           phoneHref={contact.phone_href}

@@ -349,6 +349,42 @@ export interface InversionesHomeConfig {
   areas: InversionesArea[]
 }
 
+// ─── Tasaciones Home ──────────────────────────────────────────
+
+export interface WebConfigTasacionesHome {
+  label?: string
+  title_1?: string
+  title_2?: string
+  paragraph?: string
+  cta_primary_label?: string
+  cta_primary_href?: string
+  cta_secondary_label?: string
+  cta_secondary_href?: string
+  features?: Array<{
+    title?: string
+    description?: string
+    active?: boolean
+    order?: number
+  }>
+}
+
+export interface TasacionesFeature {
+  title: string
+  description: string
+}
+
+export interface TasacionesHomeConfig {
+  label: string
+  titleLine1: string
+  titleLine2: string
+  paragraph: string
+  ctaPrimaryLabel: string
+  ctaPrimaryHref: string
+  ctaSecondaryLabel: string
+  ctaSecondaryHref: string
+  features: TasacionesFeature[]
+}
+
 // ─── Testimonios ──────────────────────────────────────────────
 
 export interface WebConfigTestimonios {

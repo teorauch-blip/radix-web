@@ -13,6 +13,9 @@ import type {
   WebConfigAdministracionHome,
   WebConfigInversionesHome,
   WebConfigTestimonios,
+  WebConfigTasacionesHome,
+  TasacionesHomeConfig,
+  TasacionesFeature,
   WebConfigInventarioHome,
   WebConfigNavbar,
   WebConfigFooter,
@@ -443,6 +446,59 @@ export async function getInversionesHomeConfig(): Promise<InversionesHomeConfig>
     bannerCtaLabel: db?.banner_cta_label || 'Ver oportunidades',
     bannerCtaHref:  db?.banner_cta_href  || '/inversiones',
     areas,
+  }
+}
+
+// ─── Tasaciones Home ──────────────────────────────────────────
+
+export type { TasacionesHomeConfig }
+
+const TASACIONES_FEATURES_FALLBACK: TasacionesFeature[] = [
+  {
+    title: 'Análisis de mercado',
+    description: 'Estudiamos oferta comparable, antecedentes y condiciones actuales.',
+  },
+  {
+    title: 'Conocimiento local',
+    description: 'Interpretamos ubicación, entorno, tipología y potencial comercial.',
+  },
+  {
+    title: 'Criterio profesional',
+    description: 'Definimos un rango de valor con fundamentos y una estrategia clara.',
+  },
+  {
+    title: 'Acompañamiento',
+    description: 'Te ayudamos a decidir cómo vender, alquilar o administrar el inmueble.',
+  },
+]
+
+/**
+ * Sección de Tasaciones de la Home.
+ * Aún no hay fila 'tasaciones_home' en web_config: mientras no exista se usan
+ * estos valores. Cuando el CMS la cargue, toma el control sin tocar código.
+ */
+export async function getTasacionesHomeConfig(): Promise<TasacionesHomeConfig> {
+  const db = await fetchConfig<WebConfigTasacionesHome>('tasaciones_home')
+
+  const cmsFeatures = (db?.features ?? [])
+    .filter(f => f.active !== false)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .map((f, i) => ({
+      title:       f.title       || TASACIONES_FEATURES_FALLBACK[i]?.title       || '',
+      description: f.description || TASACIONES_FEATURES_FALLBACK[i]?.description || '',
+    }))
+    .filter(f => f.title)
+
+  return {
+    label:              db?.label               || 'Tasaciones',
+    titleLine1:         db?.title_1             || 'El valor correcto',
+    titleLine2:         db?.title_2             || 'cambia la decisión.',
+    paragraph:          db?.paragraph           || 'Una tasación profesional combina análisis de mercado, conocimiento local y criterio comercial para definir un valor serio, competitivo y defendible.',
+    ctaPrimaryLabel:    db?.cta_primary_label   || 'Solicitar una tasación',
+    ctaPrimaryHref:     db?.cta_primary_href    || '/tasaciones',
+    ctaSecondaryLabel:  db?.cta_secondary_label || 'Hablar con un asesor',
+    ctaSecondaryHref:   db?.cta_secondary_href  || '/contacto',
+    features: cmsFeatures.length ? cmsFeatures : TASACIONES_FEATURES_FALLBACK,
   }
 }
 
