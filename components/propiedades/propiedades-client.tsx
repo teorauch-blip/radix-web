@@ -7,6 +7,7 @@ import { PropertyCard } from '@/components/property/property-card'
 import { adaptPropiedad } from '@/lib/utils/adapt-propiedad'
 import type { PropiedadPublica } from '@/lib/types/db'
 import type { FiltrosPropiedadesConfig, FiltroOpcion } from '@/lib/types/db'
+import { normalizeOperacion, applyPropiedadesFilters } from '@/lib/utils/filtros'
 
 // ─── Fallback local (si no llega la prop filtros) ─────────────
 
@@ -39,79 +40,25 @@ const FALLBACK_UBICACIONES: FiltroOpcion[] = [
   { label: 'Otras zonas',       value: 'otros' },
 ]
 
+// Los values son coincidencia EXACTA. Para "o más" hay que usar un value
+// explícito ('4+' / '4-mas'), nunca el label. Ver lib/utils/filtros.ts.
 const FALLBACK_DORMITORIOS: FiltroOpcion[] = [
-  { label: 'Dormitorios', value: '' },
-  { label: '1+',          value: '1' },
-  { label: '2+',          value: '2' },
-  { label: '3+',          value: '3' },
-  { label: '4+',          value: '4' },
+  { label: 'Todos', value: ''  },
+  { label: '1',     value: '1' },
+  { label: '2',     value: '2' },
+  { label: '3',     value: '3' },
+  { label: '4',     value: '4' },
 ]
 
-// ─── Lógica de filtrado ───────────────────────────────────────
-
-interface Filtros {
-  operacion: string
-  tipo: string
-  precioMin: string
-  precioMax: string
-  dormitorios: string
-  ubicacion: string
-}
-
-/**
- * Filtra las PropiedadPublica según los parámetros activos.
- * ubicacionOpts se usa para determinar las zonas conocidas en el caso "otros".
- */
-function applyFilters(
-  props: PropiedadPublica[],
-  f: Filtros,
-  ubicacionOpts: FiltroOpcion[],
-): PropiedadPublica[] {
-  return props.filter(p => {
-
-    // Operación: basado en qué precio está cargado
-    if (f.operacion === 'venta'    && !(p.precio_venta    && p.precio_venta    > 0)) return false
-    if (f.operacion === 'alquiler' && !(p.precio_alquiler && p.precio_alquiler > 0)) return false
-
-    // Tipo: 'desarrollo' en CMS → 'terreno' en DB (único caso de mapeo especial)
-    if (f.tipo) {
-      const tipoDb = f.tipo === 'desarrollo' ? 'terreno' : f.tipo
-      if (p.tipo !== tipoDb) return false
-    }
-
-    // Precio efectivo según operación activa
-    const precioEfectivo = f.operacion === 'alquiler'
-      ? (p.precio_alquiler ?? 0)
-      : (p.precio_venta ?? p.precio_alquiler ?? 0)
-
-    if (f.precioMin && precioEfectivo < Number(f.precioMin)) return false
-    if (f.precioMax && precioEfectivo > Number(f.precioMax)) return false
-
-    // Dormitorios: mínimo requerido
-    if (f.dormitorios) {
-      const min = Number(f.dormitorios)
-      if (!p.dormitorios || p.dormitorios < min) return false
-    }
-
-    // Ubicación: matching genérico contra ciudad + barrio
-    if (f.ubicacion) {
-      const haystack = `${p.ciudad ?? ''} ${p.barrio ?? ''}`.toLowerCase()
-      const val = f.ubicacion.toLowerCase()
-
-      if (val === 'otros') {
-        // Excluir propiedades que coincidan con cualquier zona conocida
-        const zonasConocidas = ubicacionOpts
-          .filter(u => u.value && u.value !== 'otros')
-          .map(u => u.value.toLowerCase())
-        if (zonasConocidas.some(z => haystack.includes(z))) return false
-      } else {
-        if (!haystack.includes(val)) return false
-      }
-    }
-
-    return true
-  })
-}
+/** Params que maneja esta pantalla — los que borra "Limpiar filtros". */
+const FILTER_PARAMS = [
+  'operacion',
+  'tipo',
+  'dormitorios',
+  'ubicacion',
+  'precio_min',
+  'precio_max',
+] as const
 
 // ─── Sub-componente: select con flecha custom ─────────────────
 
@@ -187,14 +134,26 @@ export function PropiedadesClient({ propiedades, filtros }: PropiedadesClientPro
   const pathname    = usePathname()
   const searchParams = useSearchParams()
 
-  // Opciones dinámicas con fallback local
-  const operacionOpts  = filtros?.operaciones ?? FALLBACK_OPERACIONES
+  // Opciones dinámicas con fallback local.
+  // El CMS guarda los value de operación capitalizados ("Venta"), así que se
+  // normalizan a slug canónico: así el value del select, el query param y la
+  // lógica de filtrado hablan siempre el mismo idioma.
+  const operacionOpts = useMemo(
+    () =>
+      (filtros?.operaciones ?? FALLBACK_OPERACIONES).map(o => ({
+        label: o.label,
+        value: normalizeOperacion(o.value),
+      })),
+    [filtros?.operaciones]
+  )
   const tipoOpts       = filtros?.tipos       ?? FALLBACK_TIPOS
-  const dormitorioOpts = filtros?.dormitorios  ?? FALLBACK_DORMITORIOS
-  const ubicacionOpts  = filtros?.ubicaciones  ?? FALLBACK_UBICACIONES
+  const dormitorioOpts = filtros?.dormitorios ?? FALLBACK_DORMITORIOS
+  const ubicacionOpts  = filtros?.ubicaciones ?? FALLBACK_UBICACIONES
 
-  // Leer filtros activos desde la URL
-  const operacion   = searchParams.get('operacion')   ?? ''
+  // Leer filtros activos desde la URL.
+  // `operacion` se normaliza al leerse para que URLs previas (?operacion=Venta)
+  // sigan filtrando y el select refleje el estado correcto.
+  const operacion   = normalizeOperacion(searchParams.get('operacion'))
   const tipo        = searchParams.get('tipo')        ?? ''
   const dormitorios = searchParams.get('dormitorios') ?? ''
   const ubicacion   = searchParams.get('ubicacion')   ?? ''
@@ -212,13 +171,19 @@ export function PropiedadesClient({ propiedades, filtros }: PropiedadesClientPro
   const activeCount = [operacion, tipo, precioMin, precioMax, dormitorios, ubicacion]
     .filter(Boolean).length
 
+  // Navegar preservando el resto de la query (sin dejar un '?' colgando)
+  const pushParams = useCallback((params: URLSearchParams) => {
+    const query = params.toString()
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
+  }, [router, pathname])
+
   // Actualizar un param en la URL sin scroll
   const setParam = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString())
     if (value) params.set(key, value)
     else params.delete(key)
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-  }, [router, pathname, searchParams])
+    pushParams(params)
+  }, [pushParams, searchParams])
 
   // Confirmar precio en URL (blur / Enter)
   const commitPrecio = useCallback(() => {
@@ -227,17 +192,19 @@ export function PropiedadesClient({ propiedades, filtros }: PropiedadesClientPro
     else params.delete('precio_min')
     if (localMax) params.set('precio_max', localMax)
     else params.delete('precio_max')
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-  }, [router, pathname, searchParams, localMin, localMax])
+    pushParams(params)
+  }, [pushParams, searchParams, localMin, localMax])
 
-  // Limpiar todos los filtros
+  // Limpiar todos los filtros (conserva params ajenos, ej. utm_*)
   const clearAll = useCallback(() => {
-    router.replace(pathname, { scroll: false })
-  }, [router, pathname])
+    const params = new URLSearchParams(searchParams.toString())
+    for (const key of FILTER_PARAMS) params.delete(key)
+    pushParams(params)
+  }, [pushParams, searchParams])
 
   // Filtrar + adaptar (memoizado)
   const filtered = useMemo(() =>
-    applyFilters(
+    applyPropiedadesFilters(
       propiedades,
       { operacion, tipo, precioMin, precioMax, dormitorios, ubicacion },
       ubicacionOpts,
