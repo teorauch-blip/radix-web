@@ -9,7 +9,8 @@ export const COMPANY = {
   founder: 'Rosa Uriburu',
   location: 'Salta Capital',
   address: 'Balcarce 1050, Salta Capital',
-  phone: '+54 387 XXX-XXXX',   // ← reemplazar con número real
+  // El teléfono NO vive acá: la única fuente es el CMS (web_config → contacto),
+  // vía getContactConfig(). Ver lib/utils/contacto.ts.
   email: 'info@radixconsultores.com',
   hours: 'Lunes a viernes · 9 a 18 hs',
   license: 'Matrículas 656 · 291',

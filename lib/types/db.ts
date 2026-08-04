@@ -60,9 +60,16 @@ export interface ImagenPublica {
 
 export interface WebConfigContacto {
   whatsapp_number?: string
+  /** Mensaje prellenado de WhatsApp configurado en el CMS. */
+  whatsapp_message?: string
   telefono_visible?: string
+  /** Número para el link tel: — el CMS lo guarda en formato internacional. */
+  phone_href?: string
   email_contacto?: string
   direccion?: string
+  /** Nombre actual en el CMS. */
+  horario_atencion?: string
+  /** Nombre legacy — se sigue aceptando. */
   horario?: string
 }
 

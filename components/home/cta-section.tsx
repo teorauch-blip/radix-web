@@ -7,8 +7,8 @@ import { ArrowUpRight, Phone, Mail } from 'lucide-react'
 import { CONTACT } from '@/lib/content/contact'
 
 interface CtaSectionProps {
-  phone?: string
-  phoneHref?: string
+  phone?: string | null
+  phoneHref?: string | null
   email?: string
   hours?: string
   ctaLabel?: string
@@ -25,6 +25,7 @@ export function CtaSection({
   ctaLabel, headline1, headline2, subtitle,
   primaryCtaLabel, primaryCtaHref, locationLine,
 }: CtaSectionProps = {}) {
+  // Sin teléfono válido en el CMS no se muestra el botón: nunca un número inventado.
   const displayPhone    = phone     ?? CONTACT.phone
   const displayHref     = phoneHref ?? CONTACT.phone_href
   const displayEmail    = email     ?? CONTACT.email
@@ -143,10 +144,12 @@ export function CtaSection({
             {displayPrimaryCtaLabel}
             <ArrowUpRight className="w-4 h-4" />
           </Link>
-          <a href={displayHref} className="btn-ghost-dark text-base px-8 py-4">
-            <Phone className="w-4 h-4" />
-            {displayPhone}
-          </a>
+          {displayPhone && displayHref && (
+            <a href={displayHref} className="btn-ghost-dark text-base px-8 py-4">
+              <Phone className="w-4 h-4" />
+              {displayPhone}
+            </a>
+          )}
         </motion.div>
 
         {/* Contact methods */}

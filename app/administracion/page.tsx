@@ -2,8 +2,9 @@ import { Metadata } from 'next'
 import { ArrowUpRight, CheckCircle2 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
-import { whatsappUrl } from '@/lib/content/contact'
+import { WHATSAPP_MSG_ADMINISTRACION } from '@/lib/content/contact'
 import { getContactConfig } from '@/lib/data/web-config'
+import { whatsappHrefOrContacto } from '@/lib/utils/contacto'
 import { pageMetadata } from '@/lib/seo/metadata'
 import { JsonLd, breadcrumbSchema } from '@/lib/seo/json-ld'
 
@@ -27,7 +28,8 @@ const FEATURES = [
 
 export default async function AdministracionPage() {
   const contact = await getContactConfig()
-  const wa = whatsappUrl('Hola, me interesa el servicio de administración de propiedades de RADIX. ¿Podría obtener más información?')
+  // Número del CMS; si no hay uno válido, el botón lleva a /contacto.
+  const cta = whatsappHrefOrContacto(contact.whatsapp_number, WHATSAPP_MSG_ADMINISTRACION)
 
   return (
     <>
@@ -65,9 +67,10 @@ export default async function AdministracionPage() {
               </p>
 
               <a
-                href={wa}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={cta.href}
+                {...(cta.isWhatsApp
+                  ? { target: '_blank', rel: 'noopener noreferrer' }
+                  : {})}
                 className="btn-primary text-base px-8 py-4"
               >
                 Consultar el servicio

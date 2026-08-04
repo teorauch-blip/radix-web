@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/footer'
 import { getAllPropiedadesPublicas, getPropiedadPublica, getPropiedadImagenes } from '@/lib/data/propiedades'
 import type { PropiedadPublica } from '@/lib/types/db'
 import { pageMetadata, toMetaDescription } from '@/lib/seo/metadata'
+import { whatsappHrefOrContacto } from '@/lib/utils/contacto'
 import { JsonLd, breadcrumbSchema, propertySchema } from '@/lib/seo/json-ld'
 import { getContactConfig } from '@/lib/data/web-config'
 import { formatPrice as formatCurrency } from '@/lib/utils'
@@ -123,9 +124,11 @@ export default async function PropiedadPage({ params }: { params: Promise<{ slug
   const moneda    = property.precio_venta ? property.moneda_venta : property.moneda_alquiler
   const operacion = OPERACION_LABEL(property)
 
-  const waNumber = contact.whatsapp_number
-  const waMsg    = encodeURIComponent(`Hola, me interesa la propiedad "${property.titulo_web ?? property.codigo}". ¿Podría obtener más información?`)
-  const wa       = `https://wa.me/${waNumber}?text=${waMsg}`
+  // Número del CMS; si no hay uno válido, la consulta va a /contacto.
+  const cta = whatsappHrefOrContacto(
+    contact.whatsapp_number,
+    `Hola, me interesa la propiedad "${property.titulo_web ?? property.codigo}". ¿Podría obtener más información?`,
+  )
 
   // Imagen de portada: la marcada como es_portada, o la primera, o imagen_portada_url
   const portada = imagenes.find(i => i.es_portada) ?? imagenes[0] ?? null
@@ -303,12 +306,11 @@ export default async function PropiedadPage({ params }: { params: Promise<{ slug
                 </div>
 
                 <a
-                  href={wa}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={cta.href}
+                  {...(cta.isWhatsApp ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                   className="btn-primary w-full justify-center mb-3"
                 >
-                  Consultar por WhatsApp
+                  {cta.isWhatsApp ? 'Consultar por WhatsApp' : 'Consultar por esta propiedad'}
                   <ArrowUpRight className="w-4 h-4" />
                 </a>
 

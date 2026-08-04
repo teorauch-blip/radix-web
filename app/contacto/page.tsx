@@ -2,7 +2,8 @@ import { Metadata } from 'next'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Phone, Mail, MapPin, Clock, ArrowUpRight } from 'lucide-react'
-import { whatsappUrl, WHATSAPP_DEFAULT_MSG } from '@/lib/content/contact'
+import { WHATSAPP_DEFAULT_MSG } from '@/lib/content/contact'
+import { getWhatsAppUrl } from '@/lib/utils/contacto'
 import { getContactConfig } from '@/lib/data/web-config'
 import { LeadForm } from '@/components/property/lead-form'
 import { pageMetadata } from '@/lib/seo/metadata'
@@ -19,7 +20,12 @@ export const metadata: Metadata = pageMetadata({
 
 export default async function ContactoPage() {
   const contact = await getContactConfig()
-  const wa = whatsappUrl(WHATSAPP_DEFAULT_MSG)
+  // Ya estamos en /contacto: si el CMS no tiene número válido, simplemente
+  // no se muestra la tarjeta de WhatsApp (no hay fallback que aporte).
+  const wa = getWhatsAppUrl({
+    phone: contact.whatsapp_number,
+    message: contact.whatsapp_message ?? WHATSAPP_DEFAULT_MSG,
+  })
   return (
     <>
       <JsonLd
@@ -55,21 +61,23 @@ export default async function ContactoPage() {
 
           {/* Primary actions */}
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mb-16">
-            <a
-              href={wa}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex flex-col p-8 bg-radix-blue/10 border border-radix-blue/25 rounded-2xl hover:border-radix-blue/50 hover:bg-radix-blue/[0.15] transition-all duration-500"
-            >
-              <div className="text-xs text-radix-blue uppercase tracking-[0.15em] mb-3">
-                WhatsApp
-              </div>
-              <div className="text-white text-lg font-light mb-2">Escribir ahora</div>
-              <div className="text-radix-text-4 text-sm flex-1">
-                Respondemos a la brevedad en horario de atención.
-              </div>
-              <ArrowUpRight className="w-5 h-5 text-radix-blue mt-6 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </a>
+            {wa && (
+              <a
+                href={wa}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex flex-col p-8 bg-radix-blue/10 border border-radix-blue/25 rounded-2xl hover:border-radix-blue/50 hover:bg-radix-blue/[0.15] transition-all duration-500"
+              >
+                <div className="text-xs text-radix-blue uppercase tracking-[0.15em] mb-3">
+                  WhatsApp
+                </div>
+                <div className="text-white text-lg font-light mb-2">Escribir ahora</div>
+                <div className="text-radix-text-4 text-sm flex-1">
+                  Respondemos a la brevedad en horario de atención.
+                </div>
+                <ArrowUpRight className="w-5 h-5 text-radix-blue mt-6 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </a>
+            )}
 
             <a
               href={`mailto:${contact.email}`}

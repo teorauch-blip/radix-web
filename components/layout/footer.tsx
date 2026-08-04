@@ -39,7 +39,7 @@ export async function Footer() {
             </p>
 
             <div className="mt-7 space-y-3.5">
-              {contact.phone && (
+              {contact.phone && contact.phone_href && (
                 <a
                   href={contact.phone_href}
                   className="flex items-center gap-3 text-sm text-radix-text-4 hover:text-radix-text-2 transition-colors duration-200"

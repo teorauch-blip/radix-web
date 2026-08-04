@@ -18,6 +18,7 @@ const STATIC_ROUTES: Array<{
   { path: '/propiedades',    priority: 0.9,  changeFrequency: 'daily'   },
   { path: '/inversiones',    priority: 0.8,  changeFrequency: 'monthly' },
   { path: '/administracion', priority: 0.8,  changeFrequency: 'monthly' },
+  { path: '/tasaciones',     priority: 0.8,  changeFrequency: 'monthly' },
   { path: '/nosotros',       priority: 0.7,  changeFrequency: 'monthly' },
   { path: '/contacto',       priority: 0.7,  changeFrequency: 'monthly' },
   { path: '/privacidad',     priority: 0.2,  changeFrequency: 'yearly'  },

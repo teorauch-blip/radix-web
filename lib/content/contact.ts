@@ -1,27 +1,38 @@
 // ─────────────────────────────────────────────────────────────────
-// RADIX — Información de contacto central
-// Editar este archivo para actualizar datos en toda la web.
+// RADIX — Datos de contacto de respaldo.
+//
+// IMPORTANTE: el teléfono y el WhatsApp NO se definen acá.
+// La única fuente de verdad es el CMS (web_config → contacto), que se lee
+// con getContactConfig() en lib/data/web-config.ts. Si el CMS no tiene un
+// número válido, los botones caen a /contacto — nunca a un número inventado.
+//
+// Este archivo solo conserva datos no telefónicos como respaldo y los
+// mensajes por defecto de WhatsApp.
 // ─────────────────────────────────────────────────────────────────
 
-// WhatsApp: formato internacional sin '+' ni espacios
-// Ejemplo Salta: 54 (Argentina) + 9 + 387 (área sin 0) + número 8 dígitos
-export const WHATSAPP_NUMBER = '5493870000000' // ← reemplazar con número real
-
 export const CONTACT = {
-  phone: '+54 387 XXX-XXXX',          // ← reemplazar
-  phone_href: 'tel:+54387XXXXXXXX',    // ← reemplazar (formato tel:)
+  /** Sin respaldo local: si el CMS no trae teléfono, no se muestra ninguno. */
+  phone: null,
+  phone_href: null,
   email: 'info@radixconsultores.com',
   address: 'Balcarce 1050, Salta Capital',
   hours: 'Lunes a viernes · 9 a 18 hs',
   location: 'Salta · NOA',
-  instagram: '', // ← agregar: 'https://instagram.com/radixconsultores'
-  facebook: '',  // ← agregar
-  linkedin: '',  // ← agregar
+  instagram: '',
+  facebook: '',
+  linkedin: '',
 } as const
+
+// ─── Mensajes prellenados de WhatsApp ─────────────────────────
 
 export const WHATSAPP_DEFAULT_MSG =
   'Hola, me comunico desde la web de RADIX. Quisiera obtener más información.'
 
-export function whatsappUrl(message: string = WHATSAPP_DEFAULT_MSG): string {
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
-}
+export const WHATSAPP_MSG_INVERSIONES =
+  'Hola, estoy interesado en oportunidades de inversión inmobiliaria en Salta. ¿Podría obtener más información?'
+
+export const WHATSAPP_MSG_ADMINISTRACION =
+  'Hola, me interesa el servicio de administración de propiedades de RADIX. ¿Podría obtener más información?'
+
+export const WHATSAPP_MSG_TASACIONES =
+  'Hola, quisiera solicitar una tasación de mi propiedad. ¿Podrían asesorarme?'

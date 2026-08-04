@@ -38,7 +38,8 @@ import type {
   FiltrosPropiedadesConfig,
   FiltroOpcion,
 } from '@/lib/types/db'
-import { CONTACT, WHATSAPP_NUMBER } from '@/lib/content/contact'
+import { CONTACT } from '@/lib/content/contact'
+import { normalizePhone, getTelHref } from '@/lib/utils/contacto'
 import { COMPANY, COMPANY_ABOUT } from '@/lib/content/company'
 import {
   HERO_LABEL,
@@ -95,29 +96,49 @@ async function fetchConfig<T>(clave: string): Promise<T | null> {
 // ─── Contacto ────────────────────────────────────────────────
 
 export interface ContactConfig {
-  phone: string
-  phone_href: string
-  whatsapp_number: string
+  /** Teléfono en formato legible para mostrar. null si el CMS no lo tiene. */
+  phone: string | null
+  /** 'tel:+54…' listo para usar. null si no hay número válido. */
+  phone_href: string | null
+  /** Solo dígitos con código de país. null si el CMS no tiene uno válido. */
+  whatsapp_number: string | null
+  /** Mensaje prellenado que configuró el CMS, si existe. */
+  whatsapp_message: string | null
   email: string
   address: string
   hours: string
 }
 
+/**
+ * ÚNICA fuente de verdad de los datos de contacto de toda la web.
+ * Ningún componente debe hardcodear teléfono ni armar links de WhatsApp
+ * por su cuenta: todo sale de acá + lib/utils/contacto.ts.
+ */
 export async function getContactConfig(): Promise<ContactConfig> {
   const db = await fetchConfig<WebConfigContacto>('contacto')
 
-  const phone = db?.telefono_visible ?? CONTACT.phone
-  const phone_href = db?.telefono_visible
-    ? `tel:${db.telefono_visible.replace(/[\s\-()]/g, '')}`
-    : CONTACT.phone_href
+  const phone = cleanText(db?.telefono_visible) ?? CONTACT.phone
+
+  // El CMS puede traer phone_href propio (con el 9 de celular). Se prioriza;
+  // si no está, se deriva del número visible. Nunca se inventa uno.
+  const phone_href =
+    getTelHref(cleanText(db?.phone_href)) ??
+    getTelHref(cleanText(db?.telefono_visible)) ??
+    CONTACT.phone_href
 
   return {
     phone,
     phone_href,
-    whatsapp_number: db?.whatsapp_number ?? WHATSAPP_NUMBER,
-    email:           db?.email_contacto  ?? CONTACT.email,
-    address:         db?.direccion       ?? CONTACT.address,
-    hours:           db?.horario         ?? CONTACT.hours,
+    // normalizePhone descarta placeholders (p. ej. 549387000000).
+    whatsapp_number: normalizePhone(cleanText(db?.whatsapp_number)),
+    whatsapp_message: cleanText(db?.whatsapp_message) ?? null,
+    email:   cleanText(db?.email_contacto) ?? CONTACT.email,
+    address: cleanText(db?.direccion)      ?? CONTACT.address,
+    // El CMS usa 'horario_atencion'; versiones previas usaban 'horario'.
+    hours:
+      cleanText(db?.horario_atencion) ??
+      cleanText(db?.horario) ??
+      CONTACT.hours,
   }
 }
 

@@ -215,6 +215,56 @@ export function propertySchema(p: PropiedadPublica, imageUrls: string[]): Json {
   }
 }
 
+export interface ServiceSchemaInput {
+  name: string
+  description: string
+  path: string
+  /** Sub-servicios ofrecidos (aparecen como OfferCatalog). */
+  ofertas?: Array<{ name: string; description: string }>
+}
+
+/** Service — para las páginas de servicio (tasaciones, administración). */
+export function serviceSchema({
+  name,
+  description,
+  path,
+  ofertas = [],
+}: ServiceSchemaInput): Json {
+  const url = absoluteUrl(path)
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    '@id': `${url}#service`,
+    name,
+    description,
+    url,
+    serviceType: name,
+    inLanguage: 'es-AR',
+    provider: { '@id': `${SITE_URL}/#organization` },
+    areaServed: [
+      { '@type': 'City', name: 'Salta' },
+      { '@type': 'AdministrativeArea', name: 'Noroeste Argentino (NOA)' },
+    ],
+    ...(ofertas.length
+      ? {
+          hasOfferCatalog: {
+            '@type': 'OfferCatalog',
+            name,
+            itemListElement: ofertas.map(o => ({
+              '@type': 'Offer',
+              itemOffered: {
+                '@type': 'Service',
+                name: o.name,
+                description: o.description,
+              },
+            })),
+          },
+        }
+      : {}),
+  }
+}
+
 /** ItemList del listado de propiedades — ayuda a Google a entender la colección. */
 export function itemListSchema(items: Array<{ slug: string | null; titulo: string }>): Json {
   return {

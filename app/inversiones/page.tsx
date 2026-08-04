@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
-import { whatsappUrl } from '@/lib/content/contact'
+import { WHATSAPP_MSG_INVERSIONES } from '@/lib/content/contact'
+import { whatsappHrefOrContacto } from '@/lib/utils/contacto'
 import { INVESTMENT_AREAS } from '@/lib/content/home'
 import { getContactConfig } from '@/lib/data/web-config'
 import { pageMetadata } from '@/lib/seo/metadata'
@@ -20,7 +21,8 @@ export const metadata: Metadata = pageMetadata({
 
 export default async function InversionesPage() {
   const contact = await getContactConfig()
-  const wa = whatsappUrl('Hola, estoy interesado en oportunidades de inversión inmobiliaria en Salta. ¿Podría obtener más información?')
+  // Número del CMS; si no hay uno válido, el botón lleva a /contacto.
+  const cta = whatsappHrefOrContacto(contact.whatsapp_number, WHATSAPP_MSG_INVERSIONES)
   return (
     <>
       <JsonLd
@@ -72,9 +74,8 @@ export default async function InversionesPage() {
           {/* CTA */}
           <div className="flex flex-col sm:flex-row gap-4">
             <a
-              href={wa}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={cta.href}
+              {...(cta.isWhatsApp ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
               className="btn-primary text-base px-8 py-4"
             >
               Consultar oportunidades

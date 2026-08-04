@@ -2,6 +2,11 @@
 
 import { createClient } from '@supabase/supabase-js'
 
+export interface LeadDetalle {
+  label: string
+  value: string
+}
+
 export interface LeadInput {
   nombre: string
   email: string
@@ -11,18 +16,46 @@ export interface LeadInput {
   propiedad_id?: string | null
   propiedad_codigo?: string | null
   propiedad_titulo?: string | null
+  /**
+   * Servicio consultado (ej. 'Tasación inmobiliaria'). `consultas_entrantes`
+   * no tiene columna `servicio`, así que se antepone al mensaje para que
+   * quede visible en el CRM sin modificar la base.
+   */
+  servicio?: string | null
+  /** Campos extra del formulario; se anexan al cuerpo del mensaje. */
+  detalles?: LeadDetalle[] | null
 }
 
 export type LeadResult = { ok: true } | { ok: false; error: string }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+/** Arma el cuerpo final: servicio + datos del formulario + mensaje libre. */
+function composeMensaje(input: LeadInput): string {
+  const partes: string[] = []
+
+  const servicio = input.servicio?.trim()
+  if (servicio) partes.push(`Servicio: ${servicio}`)
+
+  const detalles = (input.detalles ?? [])
+    .map(d => ({ label: d.label?.trim(), value: d.value?.trim() }))
+    .filter(d => d.label && d.value)
+  if (detalles.length) {
+    partes.push(detalles.map(d => `${d.label}: ${d.value}`).join('\n'))
+  }
+
+  const libre = input.mensaje?.trim()
+  if (libre) partes.push(servicio || detalles.length ? `Mensaje:\n${libre}` : libre)
+
+  return partes.join('\n\n')
+}
+
 export async function submitLead(input: LeadInput): Promise<LeadResult> {
   // ─── Validación server-side ───
   const nombre = input.nombre?.trim()
   const email = input.email?.trim()
-  const mensaje = input.mensaje?.trim()
   const telefono = input.telefono?.trim() || null
+  const mensaje = composeMensaje(input)
 
   if (!nombre || !email || !mensaje) {
     return { ok: false, error: 'Completá nombre, email y mensaje.' }
@@ -30,7 +63,7 @@ export async function submitLead(input: LeadInput): Promise<LeadResult> {
   if (!EMAIL_RE.test(email)) {
     return { ok: false, error: 'El email no parece válido.' }
   }
-  if (mensaje.length > 2000) {
+  if (mensaje.length > 4000) {
     return { ok: false, error: 'El mensaje es demasiado largo.' }
   }
 
