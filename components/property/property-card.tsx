@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ImageWithFallback } from '@/components/ui/image-with-fallback'
+import { PropertyCardImage } from '@/components/property/property-card-image'
 import { motion } from 'framer-motion'
 import { Bed, Bath, Square, ArrowUpRight, MapPin } from 'lucide-react'
 import { Property } from '@/types'
@@ -62,11 +62,13 @@ export function PropertyCard({ property, index = 0, variant = 'default' }: Prope
 
       {/* Image */}
       <div className={`relative overflow-hidden ${isFeatured ? 'aspect-[4/3]' : 'aspect-[16/10]'}`}>
-        <ImageWithFallback
-          src={property.cover_image}
+        {/* Rota sola si la propiedad trae varias fotos en `images` (hoy: solo el
+            inventario del Home las carga). Con una sola, queda estática como siempre. */}
+        <PropertyCardImage
+          images={property.images.length > 1 ? property.images : [property.cover_image]}
           alt={property.title}
-          fill
-          className="object-cover transition-transform duration-700 ease-radix group-hover:scale-105"
+          index={index}
+          className="object-cover group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
 

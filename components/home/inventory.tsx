@@ -5,26 +5,23 @@ import { motion, useInView } from 'framer-motion'
 import { ArrowUpRight, SlidersHorizontal } from 'lucide-react'
 import Link from 'next/link'
 import { PropertyCard } from '@/components/property/property-card'
-import { Property, PropertyType } from '@/types'
+import { Property } from '@/types'
 import type { InventarioHomeConfig } from '@/lib/types/db'
+import {
+  INVENTARIO_FILTROS,
+  filtrarInventario,
+  type InventarioFiltro,
+} from '@/lib/utils/inventario-home'
 
 interface InventoryProps {
   properties: Property[]
   cms?: InventarioHomeConfig
 }
 
-const FILTERS: { label: string; value: PropertyType | 'all' }[] = [
-  { label: 'Todos', value: 'all' },
-  { label: 'Venta', value: 'venta' },
-  { label: 'Alquiler', value: 'alquiler' },
-  { label: 'Inversión', value: 'inversion' },
-  { label: 'Desarrollos', value: 'desarrollo' },
-]
-
 export function Inventory({ properties, cms }: InventoryProps) {
   const ref = useRef<HTMLElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-60px' })
-  const [activeFilter, setActiveFilter] = useState<PropertyType | 'all'>('all')
+  const [activeFilter, setActiveFilter] = useState<InventarioFiltro>('all')
 
   const label              = cms?.label              || 'Inventario'
   const titleLine1         = cms?.titleLine1         || 'Propiedades'
@@ -35,10 +32,7 @@ export function Inventory({ properties, cms }: InventoryProps) {
   const viewAllHref        = cms?.viewAllHref        || '/propiedades'
   const maxDisplay         = cms?.maxDisplay         ?? 6
 
-  const filtered =
-    activeFilter === 'all'
-      ? properties
-      : properties.filter((p) => p.type === activeFilter)
+  const filtered = filtrarInventario(properties, activeFilter)
 
   return (
     <section ref={ref} className="pb-28 lg:pb-40 relative overflow-hidden">
@@ -145,7 +139,7 @@ export function Inventory({ properties, cms }: InventoryProps) {
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.7, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
         >
-          {FILTERS.map((f) => (
+          {INVENTARIO_FILTROS.map((f) => (
             <button
               key={f.value}
               onClick={() => setActiveFilter(f.value)}

@@ -12,7 +12,8 @@ import { Investments } from '@/components/home/investments'
 import { Testimonials } from '@/components/home/testimonials'
 import { CtaSection } from '@/components/home/cta-section'
 import type { Metadata } from 'next'
-import { getPropiedadesPublicas, adaptPropiedad } from '@/lib/data/propiedades'
+import { getPropiedadesPublicas, getGaleriasRotacionHome, adaptPropiedad } from '@/lib/data/propiedades'
+import { idsVisiblesInventario, ROTACION_MAX_IMAGENES } from '@/lib/utils/inventario-home'
 import {
   getContactConfig,
   getHeroConfig,
@@ -84,7 +85,23 @@ export default async function HomePage() {
     getTasacionesHomeConfig(),
   ])
 
-  const properties = rawProps.map(adaptPropiedad)
+  const base = rawProps.map(adaptPropiedad)
+
+  // Galerías para la rotación automática de las tarjetas del inventario. Se piden solo
+  // para las propiedades que el grid puede llegar a mostrar (no las ~50), y recortadas a
+  // ROTACION_MAX_IMAGENES URLs cada una. Corre en build/revalidación, no por visitante.
+  const portadaPorId = new Map(rawProps.map((p) => [p.id, p.imagen_portada_url]))
+  const galerias = await getGaleriasRotacionHome(
+    idsVisiblesInventario(base, inventario.maxDisplay).map((id) => ({
+      id,
+      portadaUrl: portadaPorId.get(id) ?? null,
+    })),
+    ROTACION_MAX_IMAGENES,
+  )
+
+  const properties = base.map((p) =>
+    galerias[p.id] ? { ...p, images: galerias[p.id] } : p,
+  )
 
   return (
     <>

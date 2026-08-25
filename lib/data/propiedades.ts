@@ -97,5 +97,46 @@ export async function getPropiedadImagenes(propiedadId: string): Promise<ImagenP
   return (data ?? []) as ImagenPublica[]
 }
 
+/**
+ * Galerías reducidas para la rotación automática de las tarjetas del Home.
+ *
+ * Por qué N llamadas y no una sola: la tabla `propiedad_imagenes` no es legible con la
+ * anon key (RLS devuelve 0 filas), y la única vía pública es la RPC por propiedad. No
+ * duele: el Home es ISR (`revalidate = 300`), así que esto corre en build/revalidación
+ * —no por visitante— y las llamadas van en paralelo (~370ms para 50 propiedades).
+ *
+ * El costo que sí importa es el del navegador (cada WebP pesa ~300KB), y se controla en
+ * dos lugares: acá recortando a `maxPorPropiedad` URLs, y en PropertyCardImage montando
+ * las capas de a una y solo cuando la tarjeta está en viewport.
+ *
+ * Devuelve SOLO las propiedades con 2+ imágenes: las de una sola foto quedan fuera del
+ * mapa y la tarjeta se renderiza estática, como hasta ahora.
+ */
+export async function getGaleriasRotacionHome(
+  propiedades: Array<{ id: string; portadaUrl: string | null }>,
+  maxPorPropiedad = 4,
+): Promise<Record<string, string[]>> {
+  const pares = await Promise.all(
+    propiedades.map(async ({ id, portadaUrl }) => {
+      const imgs = await getPropiedadImagenes(id)
+
+      // Misma prioridad que el detalle: la marcada es_portada primero, luego por orden.
+      const ordenadas = [...imgs].sort(
+        (a, b) => Number(b.es_portada) - Number(a.es_portada) || a.orden - b.orden,
+      )
+
+      // La portada que la tarjeta YA muestra va primera y sin duplicarse: el primer
+      // frame de la rotación es idéntico a lo que se ve hoy.
+      const urls = [
+        ...new Set([...(portadaUrl ? [portadaUrl] : []), ...ordenadas.map((i) => i.url)]),
+      ]
+
+      return [id, urls.slice(0, maxPorPropiedad)] as const
+    }),
+  )
+
+  return Object.fromEntries(pares.filter(([, urls]) => urls.length > 1))
+}
+
 // Re-exportado desde lib/utils/adapt-propiedad para mantener compat con importadores existentes.
 export { adaptPropiedad } from '@/lib/utils/adapt-propiedad'
