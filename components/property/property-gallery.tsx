@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X, ChevronLeft, ChevronRight, Expand } from 'lucide-react'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 
@@ -41,21 +42,31 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
     [imgs.length],
   )
 
-  // Navegación por teclado + bloqueo de scroll de fondo mientras el lightbox está abierto.
+  const isOpen = lightbox !== null
+
+  // Navegación por teclado (Escape cierra, flechas navegan).
   useEffect(() => {
-    if (lightbox === null) return
+    if (!isOpen) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeLightbox()
       if (e.key === 'ArrowLeft') prev()
       if (e.key === 'ArrowRight') next()
     }
     window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isOpen, closeLightbox, prev, next])
+
+  // Bloqueo de scroll de fondo. Depende solo de si está abierto (no del índice), para
+  // no soltar y volver a tomar el lock —con el salto de scroll asociado— en cada
+  // navegación entre fotos. Restaura el valor previo del inline style, sin pisarlo.
+  useEffect(() => {
+    if (!isOpen) return
+    const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = ''
+      document.body.style.overflow = previous
     }
-  }, [lightbox, closeLightbox, prev, next])
+  }, [isOpen])
 
   return (
     <div className="mb-10">
@@ -133,66 +144,75 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
         </div>
       )}
 
-      {/* ── Lightbox ── */}
-      {lightbox !== null && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Galería de imágenes"
-          onClick={closeLightbox}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 sm:p-8"
-        >
-          <button
-            type="button"
+      {/* ── Lightbox ──
+          Va en un portal a <body>: dentro del árbol de la página quedaría atrapado en el
+          stacking context del contenedor `relative z-10` del detalle, y el header
+          (`fixed z-50`) se pintaría por encima de la franja superior del visor,
+          interceptando el click del botón de cerrar. */}
+      {lightbox !== null &&
+        createPortal(
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Galería de imágenes"
             onClick={closeLightbox}
-            aria-label="Cerrar galería"
-            className="absolute top-4 right-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 sm:p-8"
           >
-            <X className="h-5 w-5" />
-          </button>
+            <button
+              type="button"
+              onClick={closeLightbox}
+              aria-label="Cerrar galería"
+              className="absolute top-4 right-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
 
-          {imgs.length > 1 && (
-            <>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  prev()
-                }}
-                aria-label="Imagen anterior"
-                className="absolute left-3 sm:left-6 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-              >
-                <ChevronLeft className="h-6 w-6" />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  next()
-                }}
-                aria-label="Imagen siguiente"
-                className="absolute right-3 sm:right-6 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-              >
-                <ChevronRight className="h-6 w-6" />
-              </button>
-            </>
-          )}
+            {imgs.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    prev()
+                  }}
+                  aria-label="Imagen anterior"
+                  className="absolute left-3 sm:left-6 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    next()
+                  }}
+                  aria-label="Imagen siguiente"
+                  className="absolute right-3 sm:right-6 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+              </>
+            )}
 
-          <div onClick={(e) => e.stopPropagation()} className="relative h-full w-full max-w-5xl">
-            <ImageWithFallback
-              src={imgs[lightbox].url}
-              alt={imgs[lightbox].alt}
-              fill
-              sizes="100vw"
-              className="object-contain"
-            />
-          </div>
+            {/* El `stopPropagation` va en la foto, no en la caja: así el click sobre el
+                fondo oscuro que la rodea llega al overlay y cierra el visor. */}
+            <div className="flex h-full w-full max-w-5xl items-center justify-center">
+              <ImageWithFallback
+                key={imgs[lightbox].id}
+                src={imgs[lightbox].url}
+                alt={imgs[lightbox].alt}
+                sizes="100vw"
+                onClick={(e) => e.stopPropagation()}
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
 
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-xs text-white/70">
-            {lightbox + 1} / {imgs.length}
-          </div>
-        </div>
-      )}
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-xs text-white/70">
+              {lightbox + 1} / {imgs.length}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   )
 }
