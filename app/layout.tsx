@@ -14,6 +14,7 @@ import {
 import { DEFAULT_OG_IMAGE, toMetaDescription } from '@/lib/seo/metadata'
 import { JsonLd, organizationSchema, websiteSchema } from '@/lib/seo/json-ld'
 import { getContactConfig, getRedesConfig, getSeoConfig } from '@/lib/data/web-config'
+import { GoogleTag } from '@/components/analytics/google-tag'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -136,6 +137,7 @@ export default async function RootLayout({
           ]}
         />
         {children}
+        <GoogleTag />
       </body>
     </html>
   )
