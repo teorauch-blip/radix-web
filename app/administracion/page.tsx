@@ -5,6 +5,7 @@ import { Footer } from '@/components/layout/footer'
 import { WHATSAPP_MSG_ADMINISTRACION } from '@/lib/content/contact'
 import { getContactConfig } from '@/lib/data/web-config'
 import { whatsappHrefOrContacto } from '@/lib/utils/contacto'
+import { TrackedWhatsAppLink } from '@/components/analytics/tracked-whatsapp-link'
 import { pageMetadata } from '@/lib/seo/metadata'
 import { JsonLd, breadcrumbSchema } from '@/lib/seo/json-ld'
 
@@ -66,7 +67,7 @@ export default async function AdministracionPage() {
                 en cada gestión.
               </p>
 
-              <a
+              <TrackedWhatsAppLink
                 href={cta.href}
                 {...(cta.isWhatsApp
                   ? { target: '_blank', rel: 'noopener noreferrer' }
@@ -75,7 +76,7 @@ export default async function AdministracionPage() {
               >
                 Consultar el servicio
                 <ArrowUpRight className="w-4 h-4" />
-              </a>
+              </TrackedWhatsAppLink>
             </div>
 
             <div className="bg-radix-surface border border-radix-border rounded-2xl p-8">

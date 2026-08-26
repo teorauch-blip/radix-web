@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { WHATSAPP_MSG_INVERSIONES } from '@/lib/content/contact'
 import { whatsappHrefOrContacto } from '@/lib/utils/contacto'
+import { TrackedWhatsAppLink } from '@/components/analytics/tracked-whatsapp-link'
 import { INVESTMENT_AREAS } from '@/lib/content/home'
 import { getContactConfig } from '@/lib/data/web-config'
 import { pageMetadata } from '@/lib/seo/metadata'
@@ -73,14 +74,14 @@ export default async function InversionesPage() {
 
           {/* CTA */}
           <div className="flex flex-col sm:flex-row gap-4">
-            <a
+            <TrackedWhatsAppLink
               href={cta.href}
               {...(cta.isWhatsApp ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
               className="btn-primary text-base px-8 py-4"
             >
               Consultar oportunidades
               <ArrowUpRight className="w-4 h-4" />
-            </a>
+            </TrackedWhatsAppLink>
             <Link href="/propiedades" className="btn-ghost text-base px-8 py-4">
               Ver portafolio disponible
             </Link>

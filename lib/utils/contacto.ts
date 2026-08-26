@@ -73,3 +73,51 @@ export function whatsappHrefOrContacto(
   const url = getWhatsAppUrl({ phone, message })
   return url ? { href: url, isWhatsApp: true } : { href: '/contacto', isWhatsApp: false }
 }
+
+// ─── Detección de destinos de WhatsApp ────────────────────────────
+
+/**
+ * Hosts que se consideran "el usuario termina en WhatsApp".
+ * Se compara por hostname exacto para no confundir un dominio propio que
+ * contenga la palabra whatsapp (p. ej. /contacto?via=whatsapp).
+ */
+const WHATSAPP_HOSTS = new Set([
+  'wa.me',
+  'www.wa.me',
+  'api.whatsapp.com',
+  'web.whatsapp.com',
+  'chat.whatsapp.com',
+  'whatsapp.com',
+  'www.whatsapp.com',
+])
+
+/** Base para resolver hrefs relativos cuando no hay `window` (SSR/tests). */
+const RELATIVE_BASE = 'https://radix.invalid'
+
+/**
+ * ¿Este href lleva realmente a WhatsApp?
+ *
+ * Devuelve false para rutas internas (/contacto), `tel:`, `mailto:` y para
+ * cualquier link que solo mencione WhatsApp en el texto o en un query param.
+ */
+export function isWhatsAppUrl(href: string | null | undefined): boolean {
+  if (!href) return false
+
+  const raw = String(href).trim()
+  if (!raw) return false
+
+  // La app nativa: whatsapp://send?phone=...
+  if (/^whatsapp:/i.test(raw)) return true
+
+  try {
+    const base = typeof window !== 'undefined' ? window.location.href : RELATIVE_BASE
+    const url = new URL(raw, base)
+
+    // Solo http(s): descarta tel:, mailto:, sms:, javascript:.
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
+
+    return WHATSAPP_HOSTS.has(url.hostname.toLowerCase())
+  } catch {
+    return false
+  }
+}

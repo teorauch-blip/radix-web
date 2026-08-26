@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/footer'
 import { WHATSAPP_MSG_TASACIONES } from '@/lib/content/contact'
 import { getContactConfig } from '@/lib/data/web-config'
 import { whatsappHrefOrContacto } from '@/lib/utils/contacto'
+import { TrackedWhatsAppLink } from '@/components/analytics/tracked-whatsapp-link'
 import { pageMetadata } from '@/lib/seo/metadata'
 import { JsonLd, breadcrumbSchema, serviceSchema } from '@/lib/seo/json-ld'
 import { TasacionForm } from '@/components/tasaciones/tasacion-form'
@@ -164,7 +165,7 @@ export default async function TasacionesPage() {
                     Solicitar una tasación
                     <ArrowUpRight className="w-4 h-4" />
                   </Link>
-                  <a
+                  <TrackedWhatsAppLink
                     href={asesor.href}
                     {...(asesor.isWhatsApp
                       ? { target: '_blank', rel: 'noopener noreferrer' }
@@ -172,7 +173,7 @@ export default async function TasacionesPage() {
                     className="btn-ghost text-base px-8 py-4"
                   >
                     Hablar con un asesor
-                  </a>
+                  </TrackedWhatsAppLink>
                 </div>
               </div>
 

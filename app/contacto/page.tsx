@@ -4,6 +4,7 @@ import { Footer } from '@/components/layout/footer'
 import { Phone, Mail, MapPin, Clock, ArrowUpRight } from 'lucide-react'
 import { WHATSAPP_DEFAULT_MSG } from '@/lib/content/contact'
 import { getWhatsAppUrl } from '@/lib/utils/contacto'
+import { TrackedWhatsAppLink } from '@/components/analytics/tracked-whatsapp-link'
 import { getContactConfig } from '@/lib/data/web-config'
 import { LeadForm } from '@/components/property/lead-form'
 import { pageMetadata } from '@/lib/seo/metadata'
@@ -62,7 +63,7 @@ export default async function ContactoPage() {
           {/* Primary actions */}
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mb-16">
             {wa && (
-              <a
+              <TrackedWhatsAppLink
                 href={wa}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -76,7 +77,7 @@ export default async function ContactoPage() {
                   Respondemos a la brevedad en horario de atención.
                 </div>
                 <ArrowUpRight className="w-5 h-5 text-radix-blue mt-6 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </a>
+              </TrackedWhatsAppLink>
             )}
 
             <a

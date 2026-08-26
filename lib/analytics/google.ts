@@ -25,3 +25,22 @@ export const GOOGLE_TAG_IDS: string[] = [GOOGLE_ADS_ID, GA4_ID].filter(Boolean)
 
 /** ID que se usa en el `src` del loader de gtag.js. */
 export const GOOGLE_TAG_LOADER_ID: string | undefined = GOOGLE_TAG_IDS[0]
+
+// ─── Conversiones de Google Ads ───────────────────────────────────
+
+/**
+ * Etiqueta de la conversión "clic en WhatsApp" generada en Google Ads.
+ * El `send_to` completo es `<ID de Ads>/<etiqueta>`; se arma acá para que el
+ * ID de Ads siga teniendo una sola fuente de verdad (GOOGLE_ADS_ID).
+ */
+const WHATSAPP_CONVERSION_LABEL =
+  process.env.NEXT_PUBLIC_GOOGLE_ADS_WHATSAPP_LABEL || 'pVQkCJmgvOgcELnuh71E'
+
+/**
+ * Valor exacto de `send_to` para la conversión de WhatsApp.
+ * Vacío = conversión desactivada (no se dispara ningún evento).
+ */
+export const WHATSAPP_CONVERSION_SEND_TO: string =
+  GOOGLE_ADS_ID && WHATSAPP_CONVERSION_LABEL
+    ? `${GOOGLE_ADS_ID}/${WHATSAPP_CONVERSION_LABEL}`
+    : ''

@@ -8,6 +8,7 @@ import { getAllPropiedadesPublicas, getPropiedadPublica, getPropiedadImagenes } 
 import type { PropiedadPublica } from '@/lib/types/db'
 import { pageMetadata, toMetaDescription } from '@/lib/seo/metadata'
 import { whatsappHrefOrContacto } from '@/lib/utils/contacto'
+import { TrackedWhatsAppLink } from '@/components/analytics/tracked-whatsapp-link'
 import { JsonLd, breadcrumbSchema, propertySchema } from '@/lib/seo/json-ld'
 import { getContactConfig } from '@/lib/data/web-config'
 import { formatPrice as formatCurrency } from '@/lib/utils'
@@ -305,14 +306,14 @@ export default async function PropiedadPage({ params }: { params: Promise<{ slug
                     : property.ciudad}
                 </div>
 
-                <a
+                <TrackedWhatsAppLink
                   href={cta.href}
                   {...(cta.isWhatsApp ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                   className="btn-primary w-full justify-center mb-3"
                 >
                   {cta.isWhatsApp ? 'Consultar por WhatsApp' : 'Consultar por esta propiedad'}
                   <ArrowUpRight className="w-4 h-4" />
-                </a>
+                </TrackedWhatsAppLink>
 
                 <LeadModalButton
                   propiedad={{
