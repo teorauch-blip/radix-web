@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { ArrowUpRight, Check, Loader2 } from 'lucide-react'
-import { submitLead } from '@/app/actions/leads'
+import { useTrackedLeadSubmit } from '@/lib/analytics/use-tracked-lead-submit'
 
 export interface LeadFormProperty {
   id: string
@@ -21,6 +21,7 @@ const inputClass =
   'focus:outline-none focus:border-radix-blue/50 transition-colors'
 
 export function LeadForm({ propiedad, onSuccess }: LeadFormProps) {
+  const submitConsulta = useTrackedLeadSubmit()
   const [pending, startTransition] = useTransition()
   const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -36,7 +37,7 @@ export function LeadForm({ propiedad, onSuccess }: LeadFormProps) {
     e.preventDefault()
     setError(null)
     startTransition(async () => {
-      const res = await submitLead({
+      const res = await submitConsulta({
         nombre,
         email,
         telefono,

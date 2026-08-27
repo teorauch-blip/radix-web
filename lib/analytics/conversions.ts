@@ -11,7 +11,7 @@
 // el callback se ejecuta igual y la navegación continúa.
 // ─────────────────────────────────────────────────────────────────
 
-import { WHATSAPP_CONVERSION_SEND_TO } from './google'
+import { FORM_CONSULTA_CONVERSION_SEND_TO, WHATSAPP_CONVERSION_SEND_TO } from './google'
 
 /**
  * Cuánto se espera como máximo a que gtag confirme el envío antes de
@@ -73,4 +73,30 @@ export function reportWhatsAppConversion(done?: () => void): void {
 
   // Red de seguridad: si el callback nunca llega, se navega igual.
   timer = window.setTimeout(finish, CONVERSION_TIMEOUT_MS)
+}
+
+/**
+ * Registra la conversión "Formulario | Consulta". Una llamada = UN solo
+ * `gtag('event', 'conversion')`.
+ *
+ * Se llama únicamente desde useTrackedLeadSubmit (./use-tracked-lead-submit),
+ * en la rama donde `submitLead` YA devolvió `ok: true`. No lleva
+ * `event_callback` ni timeout: el formulario se queda en la misma página, así
+ * que no hay navegación que pueda cortar el envío del pixel.
+ *
+ * Nunca lanza: si no hay gtag (SSR, ad blocker, script que no cargó) o la
+ * conversión está desactivada, es un no-op silencioso y el formulario muestra
+ * su estado de éxito igual.
+ */
+export function reportFormConsultaConversion(): void {
+  const gtag = getGtag()
+  if (!gtag || !FORM_CONSULTA_CONVERSION_SEND_TO) return
+
+  try {
+    gtag('event', 'conversion', {
+      send_to: FORM_CONSULTA_CONVERSION_SEND_TO,
+    })
+  } catch {
+    // Medir nunca puede romper un lead que YA se guardó en Supabase.
+  }
 }

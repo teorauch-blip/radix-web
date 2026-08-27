@@ -2,7 +2,7 @@
 
 import { useId, useState, useTransition } from 'react'
 import { ArrowUpRight, Check, Loader2 } from 'lucide-react'
-import { submitLead } from '@/app/actions/leads'
+import { useTrackedLeadSubmit } from '@/lib/analytics/use-tracked-lead-submit'
 
 /** Etiqueta con la que el lead queda identificado en el CRM. */
 export const SERVICIO_TASACION = 'Tasación inmobiliaria'
@@ -35,6 +35,7 @@ const labelClass =
   'block text-[0.65rem] uppercase tracking-[0.15em] text-radix-text-4 mb-2'
 
 export function TasacionForm() {
+  const submitConsulta = useTrackedLeadSubmit()
   const [pending, startTransition] = useTransition()
   const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -57,7 +58,7 @@ export function TasacionForm() {
     setError(null)
 
     startTransition(async () => {
-      const res = await submitLead({
+      const res = await submitConsulta({
         nombre,
         email,
         telefono,

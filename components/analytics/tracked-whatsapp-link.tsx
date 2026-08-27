@@ -6,6 +6,21 @@ import { reportWhatsAppConversion } from '@/lib/analytics/conversions'
 
 type AnchorProps = AnchorHTMLAttributes<HTMLAnchorElement>
 
+/**
+ * Eventos de click nativos que ya generaron una conversión.
+ *
+ * Guard defensivo, no un debounce: la clave es el `MouseEvent` en sí, así que
+ * un mismo evento no puede contarse dos veces aunque alguien agregue mañana
+ * otro handler en la cadena (un wrapper padre clickeable, un listener
+ * delegado). Dos clicks reales son dos eventos distintos y cuentan por
+ * separado — incluido el doble click rápido, que son dos interacciones
+ * genuinas del usuario y se registran como dos.
+ *
+ * WeakSet: las entradas desaparecen solas cuando el navegador descarta el
+ * evento. No acumula nada.
+ */
+const reportedClicks = new WeakSet<Event>()
+
 export interface TrackedWhatsAppLinkProps extends AnchorProps {
   /**
    * Destino real del link. Puede ser el fallback interno (`/contacto`):
@@ -46,6 +61,11 @@ export function TrackedWhatsAppLink({
 
       // Solo cuenta el destino real. `/contacto`, `tel:` y `mailto:` no.
       if (!isWhatsAppUrl(href)) return
+
+      // Desde acá todos los caminos registran conversión, así que el evento
+      // se marca una sola vez. Ver reportedClicks.
+      if (reportedClicks.has(event.nativeEvent)) return
+      reportedClicks.add(event.nativeEvent)
 
       // ¿El clic abre WhatsApp en otro lado y deja viva esta pestaña?
       // target=_blank, o cmd/ctrl/shift/alt-clic, o botón del medio.

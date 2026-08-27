@@ -44,3 +44,23 @@ export const WHATSAPP_CONVERSION_SEND_TO: string =
   GOOGLE_ADS_ID && WHATSAPP_CONVERSION_LABEL
     ? `${GOOGLE_ADS_ID}/${WHATSAPP_CONVERSION_LABEL}`
     : ''
+
+/**
+ * Etiqueta de la conversión "Formulario | Consulta" generada en Google Ads.
+ * Se dispara cuando un formulario de consulta comercial llega a éxito real
+ * (el Server Action `submitLead` devolvió ok), nunca al clickear el botón.
+ *
+ * Es una conversión DISTINTA de la de WhatsApp: cada una tiene su propia
+ * etiqueta y no se comparten entre sí.
+ */
+const FORM_CONSULTA_CONVERSION_LABEL =
+  process.env.NEXT_PUBLIC_GOOGLE_ADS_FORM_CONSULTA_LABEL || 'D2NPCO7a8ugcELnuh71E'
+
+/**
+ * Valor exacto de `send_to` para la conversión de formulario de consulta.
+ * Vacío = conversión desactivada (no se dispara ningún evento).
+ */
+export const FORM_CONSULTA_CONVERSION_SEND_TO: string =
+  GOOGLE_ADS_ID && FORM_CONSULTA_CONVERSION_LABEL
+    ? `${GOOGLE_ADS_ID}/${FORM_CONSULTA_CONVERSION_LABEL}`
+    : ''
