@@ -13,7 +13,7 @@ import { Testimonials } from '@/components/home/testimonials'
 import { CtaSection } from '@/components/home/cta-section'
 import type { Metadata } from 'next'
 import { getPropiedadesPublicas, getGaleriasRotacionHome, adaptPropiedad } from '@/lib/data/propiedades'
-import { idsVisiblesInventario, ROTACION_MAX_IMAGENES } from '@/lib/utils/inventario-home'
+import { idsVisiblesInventario, ROTACION_MAX_IMAGENES, HOME_FETCH_LIMIT } from '@/lib/utils/inventario-home'
 import {
   getContactConfig,
   getHeroConfig,
@@ -70,7 +70,7 @@ export default async function HomePage() {
     territorio, servicios, administracion, inversiones, testimoniosConfig, inventario,
     tasaciones,
   ] = await Promise.all([
-    getPropiedadesPublicas({ limit: 50 }),
+    getPropiedadesPublicas({ limit: HOME_FETCH_LIMIT }),
     getContactConfig(),
     getHeroConfig(),
     getSobreRadixConfig(),

@@ -173,10 +173,15 @@ export function Inventory({ properties, cms }: InventoryProps) {
           </div>
         )}
 
+        {/* Sin número: el Home trae HOME_FETCH_LIMIT propiedades, no el inventario
+            completo, así que `filtered.length` es el tamaño del recorte y no un total.
+            Ya era incorrecto antes de acotar el fetch —decía "las 50" habiendo 53—,
+            y cualquier número derivado de una consulta truncada va a seguir estándolo.
+            Para volver a mostrarlo haría falta un count real, que el Home hoy no pide. */}
         {filtered.length > maxDisplay && (
           <div className="text-center mt-10">
             <Link href={viewAllHref} className="btn-outline">
-              Ver las {filtered.length} propiedades
+              Ver todas las propiedades
               <ArrowUpRight className="w-4 h-4" />
             </Link>
           </div>

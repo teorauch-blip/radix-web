@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
-import { getPropiedadesPublicas } from '@/lib/data/propiedades'
+import { getAllPropiedadesPublicas } from '@/lib/data/propiedades'
 import { getFiltrosPropiedadesConfig } from '@/lib/data/web-config'
 import { PropiedadesClient } from '@/components/propiedades/propiedades-client'
 import { pageMetadata } from '@/lib/seo/metadata'
@@ -25,8 +25,11 @@ function FilterSkeleton() {
 }
 
 export default async function PropiedadesPage() {
+  // Inventario completo: los filtros son client-side, así que la página necesita
+  // todas las propiedades publicadas para poder filtrarlas. El recorte visual lo
+  // hace PropiedadesClient DESPUÉS de filtrar, sin sacar nada del HTML.
   const [rawProps, filtros] = await Promise.all([
-    getPropiedadesPublicas({ limit: 50 }),
+    getAllPropiedadesPublicas(),
     getFiltrosPropiedadesConfig(),
   ])
 

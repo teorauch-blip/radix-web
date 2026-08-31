@@ -11,6 +11,10 @@ interface PropertyCardProps {
   property: Property
   index?: number
   variant?: 'default' | 'featured'
+  /** Clases extra sobre la tarjeta. /propiedades la usa para ocultar el excedente
+   *  de "Cargar más" con `hidden`, sin envolverla en un div que rompería el
+   *  estirado del grid ni sacarla del HTML. */
+  className?: string
 }
 
 // Badge de operación — derivado de los precios (ver adaptPropiedad).
@@ -38,19 +42,34 @@ const badgeClass =
   'inline-flex items-center px-2.5 py-1 text-[0.65rem] font-medium tracking-wide ' +
   'uppercase rounded-full bg-black/40 backdrop-blur-sm text-white/80 border border-white/10'
 
-export function PropertyCard({ property, index = 0, variant = 'default' }: PropertyCardProps) {
+/** Tarjetas por fila en el breakpoint más ancho del grid (lg:grid-cols-3 × 2 filas). */
+const STAGGER_CICLO = 6
+
+export function PropertyCard({
+  property,
+  index = 0,
+  variant = 'default',
+  className = '',
+}: PropertyCardProps) {
   const isFeatured = variant === 'featured'
+
+  // El desfase se reinicia cada STAGGER_CICLO tarjetas. Con `index * 0.1` plano, la
+  // tarjeta 48 esperaba 4,8s desde que entraba en viewport antes de aparecer: en un
+  // listado largo se lee como que la página se colgó, y con "Cargar más" el lote
+  // recién revelado tardaba segundos en pintarse. Para el Home (índices 0-5) el
+  // resultado es idéntico al anterior.
+  const delay = (index % STAGGER_CICLO) * 0.1
 
   return (
     <motion.article
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-50px' }}
-      transition={{ duration: 0.7, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}
       className={`group relative overflow-hidden rounded-2xl bg-radix-surface border border-radix-border
                   transition-all duration-500 ease-radix cursor-pointer
                   hover:border-radix-border-2 hover:shadow-[0_0_50px_rgba(1,114,198,0.08)]
-                  ${isFeatured ? 'flex flex-col' : ''}`}
+                  ${isFeatured ? 'flex flex-col' : ''} ${className}`}
     >
       {/* Stretched link — toda la card es clickeable (imagen, título y contenido)
           sin anidar <a> inválidos: un único link cubre la card vía overlay. */}

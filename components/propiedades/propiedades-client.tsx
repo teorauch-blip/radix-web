@@ -50,6 +50,15 @@ const FALLBACK_DORMITORIOS: FiltroOpcion[] = [
   { label: '4',     value: '4' },
 ]
 
+/**
+ * Cuántas tarjetas se ven de entrada y cuántas suma cada "Cargar más".
+ *
+ * Ojo con lo que este número NO hace: no recorta el HTML. Todas las propiedades
+ * filtradas se renderizan siempre —server y cliente— y el excedente se oculta con
+ * `hidden` (display:none). Ver el comentario del grid, más abajo.
+ */
+const VISIBLES_INICIALES = 24
+
 /** Params que maneja esta pantalla — los que borra "Limpiar filtros". */
 const FILTER_PARAMS = [
   'operacion',
@@ -214,6 +223,25 @@ export function PropiedadesClient({ propiedades, filtros }: PropiedadesClientPro
 
   const adapted = useMemo(() => filtered.map(adaptPropiedad), [filtered])
 
+  // ── "Cargar más" ──
+  // El recorte se aplica SIEMPRE después de filtrar: `adapted` ya son las que
+  // pasaron los filtros, y visibles es cuántas de esas se muestran.
+  const [visibles, setVisibles] = useState(VISIBLES_INICIALES)
+
+  // Reset al cambiar cualquier filtro, durante el render y no en un efecto.
+  // Es el patrón de React para ajustar estado cuando cambian las props: no puede
+  // entrar en loop (solo corre si la clave cambió, y la clave viene de la URL) y
+  // evita el frame intermedio en el que se verían 72 tarjetas del filtro nuevo
+  // antes de que un useEffect las recorte a 24.
+  const filtroKey = `${operacion}|${tipo}|${dormitorios}|${ubicacion}|${precioMin}|${precioMax}`
+  const [prevFiltroKey, setPrevFiltroKey] = useState(filtroKey)
+  if (prevFiltroKey !== filtroKey) {
+    setPrevFiltroKey(filtroKey)
+    setVisibles(VISIBLES_INICIALES)
+  }
+
+  const restantes = Math.max(0, adapted.length - visibles)
+
   return (
     <div>
       {/* ── Barra de filtros ── */}
@@ -296,15 +324,51 @@ export function PropiedadesClient({ propiedades, filtros }: PropiedadesClientPro
         <span className="text-radix-text-3">{adapted.length}</span>{' '}
         {adapted.length === 1 ? 'propiedad' : 'propiedades'}
         {activeCount > 0 && ' encontradas'}
+        {restantes > 0 && (
+          <span className="text-radix-text-4"> · mostrando {visibles}</span>
+        )}
       </p>
 
-      {/* ── Grid ── */}
+      {/* ── Grid ──
+          Se renderizan TODAS las propiedades filtradas y el excedente se oculta con
+          `hidden`. Cortar el array con .slice(visibles) sería más simple pero sacaría
+          las tarjetas 25+ del HTML que genera el server: sus <a href> desaparecerían
+          del listado y quedarían como URLs huérfanas —presentes en el sitemap, sin
+          ningún link interno que lleve a ellas—, porque Googlebot no aprieta "Cargar
+          más". Con display:none los links siguen en el HTML y se rastrean igual.
+
+          Y no cuesta ancho de banda: las portadas son <img loading="lazy"> (ver
+          ImageWithFallback), y un elemento sin caja de layout nunca entra en viewport,
+          así que el navegador no descarga la imagen de una tarjeta oculta. Se pagan
+          los nodos del DOM, no los bytes de las fotos. */}
       {adapted.length > 0 ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {adapted.map((property, i) => (
-            <PropertyCard key={property.id} property={property} index={i} />
-          ))}
-        </div>
+        <>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {adapted.map((property, i) => (
+              <PropertyCard
+                key={property.id}
+                property={property}
+                index={i}
+                className={i < visibles ? '' : 'hidden'}
+              />
+            ))}
+          </div>
+
+          {restantes > 0 && (
+            <div className="text-center mt-10">
+              <button
+                type="button"
+                onClick={() => setVisibles(v => v + VISIBLES_INICIALES)}
+                className="btn-outline"
+              >
+                Cargar más
+                <span className="text-radix-text-4">
+                  {' '}({restantes} {restantes === 1 ? 'restante' : 'restantes'})
+                </span>
+              </button>
+            </div>
+          )}
+        </>
       ) : (
         <EmptyState onClear={clearAll} hasFilters={activeCount > 0} />
       )}

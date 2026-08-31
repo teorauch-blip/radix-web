@@ -20,21 +20,31 @@ function makeClient(revalidate = 300) {
 
 // ─── Queries ──────────────────────────────────────────────────
 
-export async function getPropiedadesPublicas(params?: {
+export interface PropiedadesQuery {
   tipo?: string
   ciudad?: string
   uso?: string
-  limit?: number
+  /**
+   * Obligatorio y explícito. Antes acá había un `?? 50` que capaba el listado
+   * público sin que ningún llamador lo pidiera: /propiedades mostraba 50 de 53.
+   * Si lo que querés es el inventario completo, usá getAllPropiedadesPublicas()
+   * en lugar de pasar un número grande a ojo.
+   */
+  limit: number
   offset?: number
-}): Promise<PropiedadPublica[]> {
+}
+
+export async function getPropiedadesPublicas(
+  params: PropiedadesQuery,
+): Promise<PropiedadPublica[]> {
   const supabase = makeClient(300)
 
   const { data, error } = await supabase.rpc('get_propiedades_publicas', {
-    p_tipo:   params?.tipo   ?? null,
-    p_ciudad: params?.ciudad ?? null,
-    p_uso:    params?.uso    ?? null,
-    p_limit:  params?.limit  ?? 50,
-    p_offset: params?.offset ?? 0,
+    p_tipo:   params.tipo   ?? null,
+    p_ciudad: params.ciudad ?? null,
+    p_uso:    params.uso    ?? null,
+    p_limit:  params.limit,
+    p_offset: params.offset ?? 0,
   })
 
   if (error) {
@@ -47,20 +57,34 @@ export async function getPropiedadesPublicas(params?: {
 
 /**
  * Trae TODAS las propiedades publicadas paginando la RPC.
- * Usada por el sitemap y por generateStaticParams — donde un límite fijo
- * dejaría propiedades fuera del índice de Google.
+ * Usada por el listado /propiedades, el sitemap y generateStaticParams — donde un
+ * límite fijo dejaría propiedades fuera de la web y del índice de Google.
+ *
+ * El barrido avanza por `all.length` (lo efectivamente recibido) y solo corta con
+ * una página vacía. Parece redundante y no lo es: la versión anterior avanzaba por
+ * `page * pageSize` y cortaba con `batch.length < pageSize`, mientras la RPC tenía
+ * un `LIMIT LEAST(p_limit, 100)` interno. Con pageSize=200 eso devolvía 100 filas,
+ * `100 < 200` daba el barrido por terminado, y todo lo que viniera después se perdía
+ * en silencio —sitemap incluido— apenas el inventario pasara las 100 propiedades.
+ * Avanzando por lo recibido, el barrido queda correcto aunque la RPC devuelva menos
+ * de lo pedido, hoy o en el futuro.
  */
 export async function getAllPropiedadesPublicas(pageSize = 200): Promise<PropiedadPublica[]> {
   const all: PropiedadPublica[] = []
-  const MAX_PAGES = 50 // techo de seguridad: 10.000 propiedades
+  const vistos = new Set<string>()
+  const MAX_REQUESTS = 100 // techo de seguridad: 20.000 propiedades con pageSize=200
 
-  for (let page = 0; page < MAX_PAGES; page++) {
-    const batch = await getPropiedadesPublicas({
-      limit: pageSize,
-      offset: page * pageSize,
-    })
-    all.push(...batch)
-    if (batch.length < pageSize) break
+  for (let i = 0; i < MAX_REQUESTS; i++) {
+    const batch = await getPropiedadesPublicas({ limit: pageSize, offset: all.length })
+    if (batch.length === 0) break
+
+    // Si una página no aporta ningún id nuevo, el offset no está avanzando:
+    // cortamos en vez de acumular duplicados hasta MAX_REQUESTS.
+    const nuevos = batch.filter((p) => !vistos.has(p.id))
+    if (nuevos.length === 0) break
+
+    for (const p of nuevos) vistos.add(p.id)
+    all.push(...nuevos)
   }
 
   return all
