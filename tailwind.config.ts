@@ -55,7 +55,12 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-geist-mono)', 'monospace'],
+        // Monospace del sistema. Es lo que `font-mono` viene renderizando en
+        // producción desde siempre: la variable --font-geist-mono se seteaba
+        // inline a un nombre de clase, no a una familia. Se declara explícito
+        // para no depender de una variable rota y para no bajar 71 KB de woff2
+        // que nunca se llegaron a ver. Ver la nota en app/layout.tsx.
+        mono: ['monospace'],
         serif: ['var(--font-instrument-serif)', 'Georgia', 'serif'],
       },
       fontSize: {

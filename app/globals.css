@@ -42,6 +42,9 @@
     --radix-text-2: #B0BDC8;
     --radix-text-3: #7A8FA0;
     --radix-text-4: #4A5568;
+
+    /* Easing de marca — mismo cubic-bezier que usaba Framer Motion en el hero */
+    --ease-radix: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   * {
@@ -287,4 +290,114 @@
   .text-radix-text-4 { color: var(--radix-text-4); }
   .text-radix-blue { color: var(--radix-blue); }
   .text-radix-gold { color: var(--radix-gold); }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   HERO — entrada en CSS puro, independiente de la hidratación de React
+   ════════════════════════════════════════════════════════════════════════
+
+   Regla que gobierna todo este bloque:
+
+     el estado BASE de cada elemento es el estado FINAL (visible),
+     y la animación aporta el estado inicial vía @keyframes + fill-mode: both.
+
+   Antes era al revés: Framer Motion serializaba el estado inicial en el HTML
+   (`transform:translateY(110%)`, `opacity:0`), así que el <h1> llegaba oculto
+   y solo se hacía visible cuando bajaba, parseaba e hidrataba el JS. Medido:
+   el título aparecía a los 2.9 s en móvil y el LCP era la marca de agua
+   invisible del fondo.
+
+   Con la inversión, el titular se pinta con el primer frame del CSS. Además
+   `prefers-reduced-motion` se resuelve con un simple `animation: none`, porque
+   sin animación el estado por defecto ya es "todo visible".
+
+   Presupuesto de la coreografía: termina a los ~1.4 s (antes: 3.4 s DESPUÉS
+   de hidratar). Los delays viven acá y no en JS.
+   ──────────────────────────────────────────────────────────────────────── */
+
+@keyframes radix-hero-reveal {
+  from { transform: translateY(110%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes radix-hero-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes radix-hero-slide {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes radix-hero-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Entrada del contenido — mismos gestos y easing que la versión Framer,
+   con delays comprimidos. Solo se animan transform y opacity. */
+.hero-label     { animation: radix-hero-slide  0.60s var(--ease-radix) 0.02s both; }
+.hero-line-1    { animation: radix-hero-reveal 0.85s var(--ease-radix) 0.05s both; }
+.hero-line-2    { animation: radix-hero-reveal 0.85s var(--ease-radix) 0.15s both; }
+.hero-subtitle  { animation: radix-hero-rise   0.70s var(--ease-radix) 0.30s both; }
+.hero-ctas      { animation: radix-hero-rise   0.70s var(--ease-radix) 0.40s both; }
+.hero-stats     { animation: radix-hero-fade   0.70s var(--ease-radix) 0.55s both; }
+/* El delay real de cada stat llega inline (0.55 / 0.63 / 0.71 s). */
+.hero-stat      { animation: radix-hero-rise   0.60s var(--ease-radix) 0.55s both; }
+.hero-scroll    { animation: radix-hero-fade   0.60s var(--ease-radix) 0.80s both; }
+
+/* ── Ambiente del fondo ──
+   Los tres orbes desenfocados eran loops infinitos de Framer Motion corriendo
+   sobre rAF en el main thread, arrancando en el frame 0: robaban frames justo
+   durante la entrada del título, que es lo que más se nota en móvil.
+   Ahora son animaciones CSS (fuera del main thread) y arrancan DESPUÉS de que
+   la coreografía terminó. Mismos recorridos, duraciones y easing que antes. */
+@keyframes radix-orb-1 {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(30px, -16px, 0); }
+}
+@keyframes radix-orb-2 {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(-24px, 24px, 0); }
+}
+@keyframes radix-orb-3 {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(18px, -12px, 0); }
+}
+
+.hero-orb-1 { animation: radix-orb-1 22s ease-in-out 1.6s infinite; }
+.hero-orb-2 { animation: radix-orb-2 26s ease-in-out 1.6s infinite; }
+.hero-orb-3 { animation: radix-orb-3 18s ease-in-out 2.6s infinite; }
+
+/* Luz que recorre el indicador de scroll — antes también era un loop de Framer. */
+@keyframes radix-scroll-line {
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(200%); }
+}
+
+.hero-scroll-line { animation: radix-scroll-line 2.2s ease-in-out 0.8s infinite; }
+
+/* ── prefers-reduced-motion ──
+   Apagar la animación es suficiente y seguro: el estado base de todos estos
+   elementos ya es el visible. Nada queda a opacity 0 ni desplazado. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-label,
+  .hero-line-1,
+  .hero-line-2,
+  .hero-subtitle,
+  .hero-ctas,
+  .hero-stats,
+  .hero-stat,
+  .hero-scroll,
+  .hero-orb-1,
+  .hero-orb-2,
+  .hero-orb-3,
+  .hero-scroll-line {
+    animation: none !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
 }

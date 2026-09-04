@@ -9,11 +9,17 @@ export function RadixIsotype({
   style?: CSSProperties
 }) {
   return (
+    // Mismo logotipo, re-exportado a 900px (8.8 KB en vez de 39.4 KB). El
+    // original era de 2055px y se mostraba a ~40px de alto en el header.
+    // No se usa radix-isotype.svg acá: ese asset es solo el símbolo X, sin la
+    // palabra "RADIX", así que no es un reemplazo visual del logotipo.
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/branding/radix-isotype.png"
+      src="/branding/radix-lockup-900.png"
       alt=""
       aria-hidden="true"
+      width={900}
+      height={354}
       draggable={false}
       className={cn('object-contain select-none', className)}
       style={style}

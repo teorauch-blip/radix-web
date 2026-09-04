@@ -11,6 +11,21 @@ interface HeroProps {
   cms?: HeroConfig
 }
 
+/**
+ * Reparto de responsabilidades en este componente:
+ *
+ * - La ENTRADA (lo que se ve en el primer segundo) es CSS puro. Las clases
+ *   `hero-*` viven en globals.css y se disparan con el primer frame pintado,
+ *   sin esperar a que baje ni hidrate el JS. El HTML servido ya es legible: el
+ *   estado base de cada elemento es el final, y los @keyframes aportan el
+ *   estado inicial. Antes esto lo hacía Framer con `initial`/`animate`, que
+ *   serializaba `opacity:0` y `translateY(110%)` en el HTML y dejaba el <h1>
+ *   invisible hasta la hidratación.
+ *
+ * - Framer Motion queda SOLO para los efectos ligados al scroll (parallax,
+ *   fades del fondo). Esos no afectan al primer render: se sirven en su estado
+ *   visible (`opacity:1; transform:none`) y solo entran en juego al scrollear.
+ */
 export function Hero({ cms }: HeroProps = {}) {
   const containerRef = useRef<HTMLElement>(null)
 
@@ -98,24 +113,21 @@ export function Hero({ cms }: HeroProps = {}) {
           }}
         />
 
-        {/* Floating orbs — slow, cinematic */}
-        <motion.div
-          className="absolute top-[16%] left-[10%] w-80 h-80 rounded-full blur-3xl"
+        {/* Floating orbs — slow, cinematic.
+            Mismos recorridos y duraciones que antes, pero en CSS (fuera del main
+            thread) y arrancando recién a los 1.6 s, para no competir por frames
+            con la entrada del título. */}
+        <div
+          className="hero-orb-1 absolute top-[16%] left-[10%] w-80 h-80 rounded-full blur-3xl"
           style={{ background: 'rgba(0,88,175,0.09)' }}
-          animate={{ x: [0, 30, 0], y: [0, -16, 0] }}
-          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
         />
-        <motion.div
-          className="absolute bottom-[20%] right-[6%] w-[480px] h-[480px] rounded-full blur-3xl"
+        <div
+          className="hero-orb-2 absolute bottom-[20%] right-[6%] w-[480px] h-[480px] rounded-full blur-3xl"
           style={{ background: 'rgba(10,22,110,0.10)' }}
-          animate={{ x: [0, -24, 0], y: [0, 24, 0] }}
-          transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
         />
-        <motion.div
-          className="absolute top-[42%] right-[30%] w-52 h-52 rounded-full blur-2xl"
+        <div
+          className="hero-orb-3 absolute top-[42%] right-[30%] w-52 h-52 rounded-full blur-2xl"
           style={{ background: 'rgba(155,115,45,0.042)' }}
-          animate={{ x: [0, 18, 0], y: [0, -12, 0] }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
         />
       </motion.div>
 
@@ -131,8 +143,10 @@ export function Hero({ cms }: HeroProps = {}) {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/branding/radix-isotype.png"
+          src="/branding/radix-lockup-900.png"
           alt=""
+          width={900}
+          height={354}
           draggable={false}
           className="w-full h-full object-contain"
         />
@@ -146,59 +160,36 @@ export function Hero({ cms }: HeroProps = {}) {
         <div className="max-w-[56rem]">
 
           {/* Location label */}
-          <motion.div
-            initial={{ opacity: 0, x: -16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.9, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="label-tag mb-12"
-          >
+          <div className="hero-label label-tag mb-12">
             {label}
-          </motion.div>
+          </div>
 
           {/* Headline — line 1 */}
           <div className="overflow-hidden mb-1">
-            <motion.div
-              initial={{ y: '110%' }}
-              animate={{ y: 0 }}
-              transition={{ duration: 1.2, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            >
+            <div className="hero-line-1">
               <h1 className="text-display-1 text-white font-light leading-[0.92]">
                 {titleLine1}
               </h1>
-            </motion.div>
+            </div>
           </div>
 
           {/* Headline — line 2 with editorial italic serif */}
           <div className="overflow-hidden mb-3">
-            <motion.div
-              initial={{ y: '110%' }}
-              animate={{ y: 0 }}
-              transition={{ duration: 1.2, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
-            >
+            <div className="hero-line-2">
               <h1 className="text-display-1 font-light text-white leading-[0.92]">
                 <span className="font-serif italic font-normal">{titleLine2First}</span>
                 {titleLine2Tail && <>{' '}<span>{titleLine2Tail}</span></>}
               </h1>
-            </motion.div>
+            </div>
           </div>
 
           {/* Subline */}
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 1.0, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-9 text-radix-text-3 text-lg lg:text-[1.15rem] font-light leading-relaxed max-w-[34rem]"
-          >
+          <p className="hero-subtitle mt-9 text-radix-text-3 text-lg lg:text-[1.15rem] font-light leading-relaxed max-w-[34rem]">
             {subtitle}
-          </motion.p>
+          </p>
 
           {/* CTAs */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-11 flex flex-wrap items-center gap-4"
-          >
+          <div className="hero-ctas mt-11 flex flex-wrap items-center gap-4">
             <Link href={primaryCtaHref} className="btn-primary">
               {primaryCtaLabel}
               <ArrowUpRight className="w-4 h-4" />
@@ -206,21 +197,15 @@ export function Hero({ cms }: HeroProps = {}) {
             <Link href={secondaryCtaHref} className="btn-ghost">
               {secondaryCtaLabel}
             </Link>
-          </motion.div>
+          </div>
 
           {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.4, delay: 1.5 }}
-            className="mt-24 pt-7 border-t border-white/[0.07] flex flex-wrap gap-12 lg:gap-20"
-          >
+          <div className="hero-stats mt-24 pt-7 border-t border-white/[0.07] flex flex-wrap gap-12 lg:gap-20">
             {HERO_STATS.map((stat, i) => (
-              <motion.div
+              <div
                 key={stat.label}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 1.6 + i * 0.12 }}
+                className="hero-stat"
+                style={{ animationDelay: `${0.55 + i * 0.08}s` }}
               >
                 <div className="text-3xl lg:text-[2.25rem] font-light text-white tracking-tight leading-none">
                   {stat.value}
@@ -228,34 +213,27 @@ export function Hero({ cms }: HeroProps = {}) {
                 <div className="text-radix-text-4 text-[0.6rem] mt-2 tracking-[0.1em] uppercase font-normal">
                   {stat.label}
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </motion.div>
 
       {/* ── Scroll indicator — animated line ── */}
-      <motion.div
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-10"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2.2, duration: 1.2 }}
-      >
+      <div className="hero-scroll absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-10">
         <span className="text-radix-text-4 text-[0.55rem] tracking-[0.3em] uppercase font-normal">
           Scroll
         </span>
         <div className="relative w-px h-10 overflow-hidden bg-white/[0.08]">
-          <motion.div
-            className="absolute inset-x-0 top-0 h-full"
+          <div
+            className="hero-scroll-line absolute inset-x-0 top-0 h-full"
             style={{
               background:
                 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.35), transparent)',
             }}
-            animate={{ y: ['-100%', '200%'] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
           />
         </div>
-      </motion.div>
+      </div>
 
       {/* Bottom fade to next section */}
       <div className="absolute bottom-0 left-0 right-0 h-60 bg-gradient-to-t from-radix-midnight to-transparent z-10 pointer-events-none" />
