@@ -343,8 +343,10 @@
 .hero-subtitle  { animation: radix-hero-rise   0.70s var(--ease-radix) 0.30s both; }
 .hero-ctas      { animation: radix-hero-rise   0.70s var(--ease-radix) 0.40s both; }
 .hero-stats     { animation: radix-hero-fade   0.70s var(--ease-radix) 0.55s both; }
-/* El delay real de cada stat llega inline (0.55 / 0.63 / 0.71 s). */
-.hero-stat      { animation: radix-hero-rise   0.60s var(--ease-radix) 0.55s both; }
+/* --stat-i (el índice) llega inline desde el componente; el stagger se calcula
+   acá para que la media query de mobile pueda comprimirlo. → 0.55 / 0.63 / 0.71 s */
+.hero-stat      { animation: radix-hero-rise   0.60s var(--ease-radix)
+                             calc(0.55s + var(--stat-i, 0) * 0.08s) both; }
 .hero-scroll    { animation: radix-hero-fade   0.60s var(--ease-radix) 0.80s both; }
 
 /* ── Ambiente del fondo ──
@@ -377,6 +379,42 @@
 }
 
 .hero-scroll-line { animation: radix-scroll-line 2.2s ease-in-out 0.8s infinite; }
+
+/* ── Mobile: coreografía comprimida ──────────────────────────────────────
+   En desktop la línea 2 del titular ocupa UNA línea, así que el reveal recorre
+   ~53 px. Abajo de 480 px "definen el estándar." envuelve a DOS líneas y el
+   mismo `translateY(110%)` pasa a recorrer ~104 px en la misma duración: la
+   palabra "estándar." sale del mask bastante después que "Inmuebles que", y el
+   resto del bloque —pensado con delays de desktop— llega todavía más tarde.
+
+   Medido en producción sobre móvil con red y CPU reales throttleadas:
+   el titular quedaba asentado a los 2040 ms y las stats recién a los 2787 ms,
+   o sea ~750 ms viendo solo el título. Ventana total 1015 ms.
+
+   Acá se comprime todo el reparto: mismos gestos, mismo easing, mismo reveal
+   vertical con overflow-hidden, solo delays y duraciones más cortos. Las dos
+   líneas del titular arrancan con 40 ms de diferencia (antes 100 ms, que con el
+   doble de recorrido se sentían como 250 ms), y la coreografía entera cierra a
+   los ~0.90 s en vez de 1.40 s.
+
+   Desktop (≥768px) queda intacto.
+   ──────────────────────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .hero-label    { animation-delay: 0s;    animation-duration: 0.40s; }
+  .hero-line-1   { animation-delay: 0.02s; animation-duration: 0.55s; }
+  .hero-line-2   { animation-delay: 0.06s; animation-duration: 0.55s; }
+  .hero-subtitle { animation-delay: 0.16s; animation-duration: 0.42s; }
+  .hero-ctas     { animation-delay: 0.24s; animation-duration: 0.42s; }
+  .hero-stats    { animation-delay: 0.30s; animation-duration: 0.40s; }
+  .hero-stat     { animation-delay: calc(0.34s + var(--stat-i, 0) * 0.05s);
+                   animation-duration: 0.38s; }
+  .hero-scroll   { animation-delay: 0.50s; animation-duration: 0.40s; }
+
+  /* Los orbes arrancaban a 1.6 s para no pisar la entrada; con la coreografía
+     más corta se adelantan en la misma proporción. */
+  .hero-orb-1, .hero-orb-2 { animation-delay: 1.1s; }
+  .hero-orb-3              { animation-delay: 2.1s; }
+}
 
 /* ── prefers-reduced-motion ──
    Apagar la animación es suficiente y seguro: el estado base de todos estos

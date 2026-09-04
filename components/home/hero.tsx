@@ -205,7 +205,10 @@ export function Hero({ cms }: HeroProps = {}) {
               <div
                 key={stat.label}
                 className="hero-stat"
-                style={{ animationDelay: `${0.55 + i * 0.08}s` }}
+                // Solo el índice; el delay se calcula en CSS a partir de él. Si
+                // fuera un animation-delay inline, ganaría por especificidad y
+                // la media query de mobile no podría comprimir el stagger.
+                style={{ '--stat-i': i } as React.CSSProperties}
               >
                 <div className="text-3xl lg:text-[2.25rem] font-light text-white tracking-tight leading-none">
                   {stat.value}
