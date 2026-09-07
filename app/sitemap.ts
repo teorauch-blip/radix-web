@@ -16,6 +16,10 @@ const STATIC_ROUTES: Array<{
 }> = [
   { path: '/',               priority: 1.0,  changeFrequency: 'daily'   },
   { path: '/propiedades',    priority: 0.9,  changeFrequency: 'daily'   },
+  // Landing de Google Ads. Indexable y con canonical propio, pero por debajo
+  // de /propiedades: ese es el listado completo y la página principal del
+  // portafolio; esta es la entrada corta, orientada a búsqueda local.
+  { path: '/propiedades-en-salta', priority: 0.8, changeFrequency: 'daily' },
   { path: '/inversiones',    priority: 0.8,  changeFrequency: 'monthly' },
   { path: '/administracion', priority: 0.8,  changeFrequency: 'monthly' },
   { path: '/tasaciones',     priority: 0.8,  changeFrequency: 'monthly' },

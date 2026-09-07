@@ -2,12 +2,19 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { ChevronDown, X, Search } from 'lucide-react'
+import { X, Search } from 'lucide-react'
 import { PropertyCard } from '@/components/property/property-card'
+import { FilterSelect } from '@/components/propiedades/filter-controls'
 import { adaptPropiedad } from '@/lib/utils/adapt-propiedad'
 import type { PropiedadPublica } from '@/lib/types/db'
 import type { FiltrosPropiedadesConfig, FiltroOpcion } from '@/lib/types/db'
-import { normalizeOperacion, applyPropiedadesFilters } from '@/lib/utils/filtros'
+import {
+  normalizeOperacion,
+  applyPropiedadesFilters,
+  readFiltrosActivos,
+  countFiltrosActivos,
+  FILTER_PARAM_KEYS,
+} from '@/lib/utils/filtros'
 
 // ─── Fallback local (si no llega la prop filtros) ─────────────
 
@@ -58,53 +65,6 @@ const FALLBACK_DORMITORIOS: FiltroOpcion[] = [
  * `hidden` (display:none). Ver el comentario del grid, más abajo.
  */
 const VISIBLES_INICIALES = 24
-
-/** Params que maneja esta pantalla — los que borra "Limpiar filtros". */
-const FILTER_PARAMS = [
-  'operacion',
-  'tipo',
-  'dormitorios',
-  'ubicacion',
-  'precio_min',
-  'precio_max',
-] as const
-
-// ─── Sub-componente: select con flecha custom ─────────────────
-
-interface FilterSelectProps {
-  label: string
-  value: string
-  options: FiltroOpcion[]
-  onChange: (v: string) => void
-}
-
-function FilterSelect({ label, value, options, onChange }: FilterSelectProps) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-[0.6rem] uppercase tracking-[0.15em] text-radix-text-4 font-medium">
-        {label}
-      </span>
-      <div className="relative">
-        <select
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          style={{ colorScheme: 'dark' }}
-          className="w-full bg-radix-dark border border-radix-border text-sm text-radix-text-2 rounded-xl pl-3 pr-8 py-2.5 appearance-none focus:outline-none focus:border-radix-blue/50 transition-colors duration-200 cursor-pointer"
-        >
-          {options.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-radix-text-4 pointer-events-none"
-          aria-hidden="true"
-        />
-      </div>
-    </div>
-  )
-}
 
 // ─── Estado vacío ─────────────────────────────────────────────
 
@@ -161,13 +121,14 @@ export function PropiedadesClient({ propiedades, filtros }: PropiedadesClientPro
 
   // Leer filtros activos desde la URL.
   // `operacion` se normaliza al leerse para que URLs previas (?operacion=Venta)
-  // sigan filtrando y el select refleje el estado correcto.
-  const operacion   = normalizeOperacion(searchParams.get('operacion'))
-  const tipo        = searchParams.get('tipo')        ?? ''
-  const dormitorios = searchParams.get('dormitorios') ?? ''
-  const ubicacion   = searchParams.get('ubicacion')   ?? ''
-  const precioMin   = searchParams.get('precio_min')  ?? ''
-  const precioMax   = searchParams.get('precio_max')  ?? ''
+  // sigan filtrando y el select refleje el estado correcto. El parseo vive en
+  // lib/utils/filtros para que la landing de Ads lea los mismos params con el
+  // mismo criterio, sin una segunda copia que se desincronice.
+  const activos = useMemo(
+    () => readFiltrosActivos(key => searchParams.get(key)),
+    [searchParams],
+  )
+  const { operacion, tipo, dormitorios, ubicacion, precioMin, precioMax } = activos
 
   // Estado local para precio: se confirma con Enter o blur (no en cada tecla)
   const [localMin, setLocalMin] = useState(precioMin)
@@ -177,8 +138,7 @@ export function PropiedadesClient({ propiedades, filtros }: PropiedadesClientPro
   useEffect(() => { setLocalMin(searchParams.get('precio_min') ?? '') }, [searchParams])
   useEffect(() => { setLocalMax(searchParams.get('precio_max') ?? '') }, [searchParams])
 
-  const activeCount = [operacion, tipo, precioMin, precioMax, dormitorios, ubicacion]
-    .filter(Boolean).length
+  const activeCount = countFiltrosActivos(activos)
 
   // Navegar preservando el resto de la query (sin dejar un '?' colgando)
   const pushParams = useCallback((params: URLSearchParams) => {
@@ -207,18 +167,14 @@ export function PropiedadesClient({ propiedades, filtros }: PropiedadesClientPro
   // Limpiar todos los filtros (conserva params ajenos, ej. utm_*)
   const clearAll = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString())
-    for (const key of FILTER_PARAMS) params.delete(key)
+    for (const key of FILTER_PARAM_KEYS) params.delete(key)
     pushParams(params)
   }, [pushParams, searchParams])
 
   // Filtrar + adaptar (memoizado)
-  const filtered = useMemo(() =>
-    applyPropiedadesFilters(
-      propiedades,
-      { operacion, tipo, precioMin, precioMax, dormitorios, ubicacion },
-      ubicacionOpts,
-    ),
-    [propiedades, operacion, tipo, precioMin, precioMax, dormitorios, ubicacion, ubicacionOpts]
+  const filtered = useMemo(
+    () => applyPropiedadesFilters(propiedades, activos, ubicacionOpts),
+    [propiedades, activos, ubicacionOpts],
   )
 
   const adapted = useMemo(() => filtered.map(adaptPropiedad), [filtered])

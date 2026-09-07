@@ -24,6 +24,12 @@ export function toMetaDescription(text: string, maxLength = 160): string {
 export interface PageMetadataInput {
   /** Título sin la marca: el template del layout añade " — RADIX". */
   title: string
+  /**
+   * Emite el título tal cual, sin pasar por el template `%s — RADIX` del
+   * layout. Solo para páginas cuyo <title> está escrito palabra por palabra
+   * (la landing de Ads), donde el sufijo automático lo duplicaría.
+   */
+  titleAbsolute?: boolean
   description: string
   /** Ruta relativa canónica, ej. '/propiedades'. */
   path: string
@@ -43,6 +49,7 @@ export interface PageMetadataInput {
  */
 export function pageMetadata({
   title,
+  titleAbsolute = false,
   description,
   path,
   ogTitle,
@@ -51,10 +58,10 @@ export function pageMetadata({
   noindex = false,
 }: PageMetadataInput): Metadata {
   const url = absoluteUrl(path)
-  const socialTitle = ogTitle ?? `${title} — RADIX`
+  const socialTitle = ogTitle ?? (titleAbsolute ? title : `${title} — RADIX`)
 
   return {
-    title,
+    title: titleAbsolute ? { absolute: title } : title,
     description,
     alternates: {
       canonical: url,

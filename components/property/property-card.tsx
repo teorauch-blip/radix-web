@@ -15,6 +15,30 @@ interface PropertyCardProps {
    *  de "Cargar más" con `hidden`, sin envolverla en un div que rompería el
    *  estirado del grid ni sacarla del HTML. */
   className?: string
+  /**
+   * Se invoca cuando el usuario abre la propiedad, en el onClick del propio
+   * link. Opcional y sin default: quien no la pasa (Home, /propiedades) se
+   * comporta exactamente igual que antes.
+   *
+   * Va acá y no en un listener delegado por el mismo motivo que en
+   * TrackedWhatsAppLink: atado al elemento que se clickea, el handler corre
+   * siempre que el link se vea, sin depender de que el evento burbujee.
+   * Nunca cancela la navegación.
+   */
+  onOpen?: () => void
+  /**
+   * Entrada animada al entrar en viewport (Framer Motion). Por defecto `true`:
+   * es lo que hacen el Home y /propiedades desde siempre.
+   *
+   * En `false` la tarjeta se pinta directamente en su estado final. Existe por
+   * la landing de Ads: con la animación puesta, el HTML del servidor sale con
+   * `opacity: 0` inline y las tarjetas recién se ven cuando bajó, parseó e
+   * hidrató Framer Motion. En una landing donde el usuario llega desde un
+   * anuncio, eso es una pantalla vacía durante el peor momento posible. Es el
+   * mismo razonamiento que llevó a reescribir la entrada del hero en CSS puro
+   * (ver app/globals.css).
+   */
+  animate?: boolean
 }
 
 // Badge de operación — derivado de los precios (ver adaptPropiedad).
@@ -50,6 +74,8 @@ export function PropertyCard({
   index = 0,
   variant = 'default',
   className = '',
+  onOpen,
+  animate = true,
 }: PropertyCardProps) {
   const isFeatured = variant === 'featured'
 
@@ -60,22 +86,28 @@ export function PropertyCard({
   // resultado es idéntico al anterior.
   const delay = (index % STAGGER_CICLO) * 0.1
 
-  return (
-    <motion.article
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
-      transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={`group relative overflow-hidden rounded-2xl bg-radix-surface border border-radix-border
+  // Barrio + ciudad, salteando los vacíos. `adaptPropiedad` resuelve el barrio
+  // con `p.barrio ?? p.ciudad`, y `??` no atrapa el string vacío: cuando el CRM
+  // trae el barrio en blanco, `{neighborhood}, {city}` arrancaba con una coma
+  // colgada (", Salta Centro").
+  const ubicacion = [property.neighborhood, property.city]
+    .map((parte) => (parte ?? '').trim())
+    .filter(Boolean)
+    .join(', ')
+
+  const cardClass = `group relative overflow-hidden rounded-2xl bg-radix-surface border border-radix-border
                   transition-all duration-500 ease-radix cursor-pointer
                   hover:border-radix-border-2 hover:shadow-[0_0_50px_rgba(1,114,198,0.08)]
-                  ${isFeatured ? 'flex flex-col' : ''} ${className}`}
-    >
+                  ${isFeatured ? 'flex flex-col' : ''} ${className}`
+
+  const contenido = (
+    <>
       {/* Stretched link — toda la card es clickeable (imagen, título y contenido)
           sin anidar <a> inválidos: un único link cubre la card vía overlay. */}
       <Link
         href={`/propiedades/${property.slug}`}
         aria-label={`Ver detalle de ${property.title}`}
+        onClick={onOpen}
         className="absolute inset-0 z-20 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-radix-blue"
       />
 
@@ -129,7 +161,7 @@ export function PropertyCard({
         {/* Location */}
         <div className="flex items-center gap-1.5 text-xs text-radix-text-4 mb-3">
           <MapPin className="w-3 h-3" />
-          {property.neighborhood}, {property.city}
+          {ubicacion}
         </div>
 
         {/* Title */}
@@ -148,13 +180,16 @@ export function PropertyCard({
             <Square className="w-3.5 h-3.5" />
             {formatSurface(property.surface_total)}
           </div>
-          {property.bedrooms && (
+          {/* `> 0` y no solo el valor: en JSX `{0 && <div/>}` no renderiza el div
+              pero SÍ imprime el 0, así que una propiedad con 0 dormitorios o 0
+              baños mostraba un "0" suelto entre los metros y el resto. */}
+          {(property.bedrooms ?? 0) > 0 && (
             <div className="flex items-center gap-1.5">
               <Bed className="w-3.5 h-3.5" />
               {property.bedrooms} amb.
             </div>
           )}
-          {property.bathrooms && (
+          {(property.bathrooms ?? 0) > 0 && (
             <div className="flex items-center gap-1.5">
               <Bath className="w-3.5 h-3.5" />
               {property.bathrooms} baños
@@ -184,6 +219,24 @@ export function PropertyCard({
           </span>
         </div>
       </div>
+    </>
+  )
+
+  // Sin animación: la tarjeta ya está en su estado final en el HTML del
+  // servidor, así que se ve antes de que llegue una sola línea de JavaScript.
+  if (!animate) {
+    return <article className={cardClass}>{contenido}</article>
+  }
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}
+      className={cardClass}
+    >
+      {contenido}
     </motion.article>
   )
 }

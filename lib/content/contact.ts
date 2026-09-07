@@ -36,3 +36,7 @@ export const WHATSAPP_MSG_ADMINISTRACION =
 
 export const WHATSAPP_MSG_TASACIONES =
   'Hola, quisiera solicitar una tasación de mi propiedad. ¿Podrían asesorarme?'
+
+/** Landing de Google Ads (/propiedades-en-salta). */
+export const WHATSAPP_MSG_PROPIEDADES_SALTA =
+  'Hola, estoy buscando una propiedad en Salta. ¿Podrían ayudarme?'

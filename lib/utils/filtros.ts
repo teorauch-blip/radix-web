@@ -207,3 +207,118 @@ export function applyPropiedadesFilters(
     return true
   })
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Lectura y serialización de los filtros
+//
+// Los mismos seis filtros se leen desde tres lugares distintos: la URL del
+// listado (/propiedades, client-side con useSearchParams), los `searchParams`
+// del server component de la landing, y el link "Ver todas las propiedades"
+// que traslada el estado de una pantalla a la otra. Centralizar acá el nombre
+// de cada param y su normalización es lo que evita que las tres copias se
+// desincronicen: si mañana se agrega un filtro, se agrega una sola vez.
+// ─────────────────────────────────────────────────────────────────
+
+/** Nombre de cada filtro en la query string. Es también la lista que borra "Limpiar". */
+export const FILTER_PARAM_KEYS = [
+  'operacion',
+  'tipo',
+  'dormitorios',
+  'ubicacion',
+  'precio_min',
+  'precio_max',
+] as const
+
+/** Estado sin ningún filtro aplicado. */
+export const FILTROS_VACIOS: FiltrosActivos = {
+  operacion:   '',
+  tipo:        '',
+  dormitorios: '',
+  ubicacion:   '',
+  precioMin:   '',
+  precioMax:   '',
+}
+
+/**
+ * Lee los seis filtros desde cualquier fuente de query params.
+ *
+ * `get` abstrae la única diferencia entre las dos fuentes: `URLSearchParams`
+ * (y el ReadonlyURLSearchParams de Next) exponen `.get(key)`, mientras que el
+ * `searchParams` de un Server Component es un objeto plano. Ver `firstParam`.
+ *
+ * `operacion` se normaliza al leerse, así una URL vieja o escrita a mano
+ * (?operacion=Venta) filtra igual que la canónica.
+ */
+export function readFiltrosActivos(
+  get: (key: string) => string | null | undefined,
+): FiltrosActivos {
+  const val = (key: string) => (get(key) ?? '').toString().trim()
+
+  return {
+    operacion:   normalizeOperacion(val('operacion')),
+    tipo:        val('tipo'),
+    dormitorios: val('dormitorios'),
+    ubicacion:   val('ubicacion'),
+    precioMin:   val('precio_min'),
+    precioMax:   val('precio_max'),
+  }
+}
+
+/**
+ * Adapta un valor del `searchParams` de un Server Component (donde un param
+ * repetido llega como array) al string único que espera `readFiltrosActivos`.
+ */
+export function firstParam(value: string | string[] | undefined): string | null {
+  if (Array.isArray(value)) return value[0] ?? null
+  return value ?? null
+}
+
+/**
+ * Serializa los filtros a query params, omitiendo los vacíos.
+ * Solo emite los seis params de filtro: lo que arma no arrastra `gclid` ni
+ * `utm_*` de la landing hacia una navegación interna.
+ */
+export function filtrosToSearchParams(f: FiltrosActivos): URLSearchParams {
+  const params = new URLSearchParams()
+
+  if (f.operacion)   params.set('operacion',   f.operacion)
+  if (f.tipo)        params.set('tipo',        f.tipo)
+  if (f.dormitorios) params.set('dormitorios', f.dormitorios)
+  if (f.ubicacion)   params.set('ubicacion',   f.ubicacion)
+  if (f.precioMin)   params.set('precio_min',  f.precioMin)
+  if (f.precioMax)   params.set('precio_max',  f.precioMax)
+
+  return params
+}
+
+/** Cuántos de los seis filtros están activos. */
+export function countFiltrosActivos(f: FiltrosActivos): number {
+  return [
+    f.operacion,
+    f.tipo,
+    f.dormitorios,
+    f.ubicacion,
+    f.precioMin,
+    f.precioMax,
+  ].filter(Boolean).length
+}
+
+/**
+ * Ordena el inventario para un listado comercial: destacadas primero y, dentro
+ * de cada grupo, las publicadas más recientemente.
+ *
+ * Se aplica UNA vez sobre el inventario completo. Como `Array.prototype.filter`
+ * preserva el orden, cualquier subconjunto filtrado después hereda esta
+ * prioridad sin volver a ordenar.
+ */
+export function ordenarParaListado(props: PropiedadPublica[]): PropiedadPublica[] {
+  const ts = (p: PropiedadPublica): number => {
+    if (!p.publicado_en) return 0
+    const t = new Date(p.publicado_en).getTime()
+    return Number.isFinite(t) ? t : 0
+  }
+
+  return [...props].sort(
+    (a, b) => Number(Boolean(b.destacada)) - Number(Boolean(a.destacada)) || ts(b) - ts(a),
+  )
+}
